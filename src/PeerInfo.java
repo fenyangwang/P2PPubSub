@@ -1,16 +1,21 @@
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 public class PeerInfo implements Serializable {
     int id;
     String ip;
     int port;
-    List<String> subscription;
+    ArrayList<String> subscriptionList;
     PeerInfo(int id, String ip, int port) {
         this.id = id;
         this.ip = ip;
         this.port = port;
-        subscription = new ArrayList<>();
+        subscriptionList = new ArrayList<>();
+    }
+    PeerInfo(int id, String ip, int port, ArrayList<String> subscriptionList) {
+        this.id = id;
+        this.ip = ip;
+        this.port = port;
+        this.subscriptionList = subscriptionList;
     }
 }

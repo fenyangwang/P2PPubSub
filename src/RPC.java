@@ -9,7 +9,7 @@ import java.util.Arrays;
 public class RPC {
     public static PeerInfo findSuccessor(String message) {
         Socket socket = null;
-        PrintWriter printWriter = null;
+        ObjectOutputStream objectOutputStream = null;
         ObjectInputStream objectInputStream = null;
         PeerInfo successorInfo = null;
         String[] request = message.split(" ");
@@ -18,9 +18,9 @@ public class RPC {
         int desPort = Integer.valueOf(request[2]);
         try {
             socket = new Socket(desIp, desPort);
-            printWriter = new PrintWriter(socket.getOutputStream());
-            printWriter.println(targetId + " findSucc");
-            printWriter.flush();
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(null, targetId + " findSucc"));
+            objectOutputStream.flush();
 
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             successorInfo = (PeerInfo) objectInputStream.readObject();
@@ -33,7 +33,7 @@ public class RPC {
         } finally {
 
             try {
-                printWriter.close();
+                objectOutputStream.close();
                 objectInputStream.close();
                 socket.close();
 
@@ -45,28 +45,21 @@ public class RPC {
         return null;
     }
 
-    public static void notifySuccessor(String message) {
+    public static void notifySuccessor(PeerInfo peerInfo, String desIp, int desPort) {
         Socket socket = null;
-        PrintWriter printWriter = null;
-
-        String[] request = message.split(" ");
-        String desIp = request[3];
-        int desPort = Integer.parseInt(request[4]);
-
-        int localId = Integer.parseInt(request[0]);
-        String localIp = request[1];
-        int localPort = Integer.parseInt(request[2]);
+        ObjectOutputStream objectOutputStream = null;
 
         try {
             socket = new Socket(desIp, desPort);
-            printWriter = new PrintWriter(socket.getOutputStream());
-            printWriter.println(localId + " " + localIp + " " + localPort + " notify");
-            printWriter.flush();
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(peerInfo, "notify"));
+            objectOutputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            printWriter.close();
+
             try {
+                objectOutputStream.close();
                 socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -79,14 +72,14 @@ public class RPC {
         String desIp = request[0];
         int desPort = Integer.parseInt(request[1]);
         Socket socket = null;
-        PrintWriter printWriter = null;
+        ObjectOutputStream objectOutputStream = null;
         ObjectInputStream objectInputStream = null;
         PeerInfo predecessorInfo = null;
         try {
             socket = new Socket(desIp, desPort);
-            printWriter = new PrintWriter(socket.getOutputStream());
-            printWriter.println("findPre");
-            printWriter.flush();
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(null, "findPre"));
+            objectOutputStream.flush();
 
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             predecessorInfo = (PeerInfo) objectInputStream.readObject();
@@ -95,8 +88,9 @@ public class RPC {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            printWriter.close();
+
             try {
+                objectOutputStream.close();
                 socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -110,10 +104,10 @@ public class RPC {
         try {
             System.out.println("RPC is sending " + message + " to port " + port);
             Socket socket = new Socket("127.0.0.1",port);
-            PrintWriter printWriter = new PrintWriter(socket.getOutputStream());
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            printWriter.flush();
+            objectOutputStream.writeObject(new Request(null, "test hahahaha"));
+            objectOutputStream.flush();
 
             System.out.println("11111");
             String line = bufferedReader.readLine();
@@ -123,7 +117,7 @@ public class RPC {
 
             System.out.println("33333");
 
-            printWriter.close();
+            objectOutputStream.close();
             bufferedReader.close();
             socket.close();
         } catch (IOException e) {
@@ -131,4 +125,49 @@ public class RPC {
         }
     }
 
+    public static void notifySuccessorChangePredecessor(PeerInfo predecessor, PeerInfo successor) {
+        Socket socket = null;
+        ObjectOutputStream objectOutputStream = null;
+        try {
+            socket = new Socket(successor.ip, successor.id);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(predecessor, "changePredecessor"));
+            objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                objectOutputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public static void notifyPredecessorChangeSuccessor(PeerInfo successor, PeerInfo predecessor) {
+        Socket socket = null;
+        ObjectOutputStream objectOutputStream = null;
+        try {
+            socket = new Socket(predecessor.ip, predecessor.id);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(successor, "changeSuccessor"));
+            objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                objectOutputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public static void deletePeerFromFingerTable(int id) {
+
+    }
 }

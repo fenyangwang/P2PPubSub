@@ -13,17 +13,19 @@ public class ServerHandler implements Runnable {
 
     @Override
     public void run() {
-        BufferedReader bufferedReader = null;
+        ObjectInputStream objectInputStream = null;
         PrintWriter printWriter = null;
         ObjectOutputStream objectOutputStream = null;
         try {
-            bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            String line = bufferedReader.readLine();
+            objectInputStream = new ObjectInputStream(socket.getInputStream());
+            Request request = (Request) objectInputStream.readObject();
+            //String line = bufferedReader.readLine();
+            String line = request.message;
 
             if (line.endsWith("findSucc")) {
                 findSuccessor(line, objectOutputStream);
             } else if (line.endsWith("notify")) {
-                notify(line);
+                notify(request.peerInfo);
             } else if (line.endsWith("findPre")) {
                 findPredecessor(objectOutputStream);
             } else {
@@ -32,6 +34,14 @@ public class ServerHandler implements Runnable {
         } catch (IOException e) {
             System.out.println("here is the error on port " + peer.port);
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                objectInputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -39,7 +49,7 @@ public class ServerHandler implements Runnable {
         String[] request = line.split(" ");
         int targetId = Integer.valueOf(request[0]);
         PeerInfo peerInfo = peer.findSuccessor(targetId);
-        //System.out.println(peerInfo.id + " " + peerInfo.ip + " " + peerInfo.port + " " + peerInfo.subscription.size());
+        //System.out.println(peerInfo.id + " " + peerInfo.ip + " " + peerInfo.port + " " + peerInfo.subscriptionList.size());
         try {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(peerInfo);
@@ -57,12 +67,8 @@ public class ServerHandler implements Runnable {
         }
     }
 
-    private void notify(String message) {
-        String[] request = message.split(" ");
-        int id = Integer.parseInt(request[0]);
-        String ip = request[1];
-        int port = Integer.parseInt(request[2]);
-        peer.fixPredecessor(id, ip, port);
+    private void notify(PeerInfo peerInfo) {
+        peer.fixPredecessor(peerInfo);
     }
 
     private void findPredecessor(ObjectOutputStream objectOutputStream) {

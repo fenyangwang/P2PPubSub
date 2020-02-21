@@ -10,7 +10,7 @@ public class Peer {
 
     private PeerInfo bootPeer = new PeerInfo(getHash("127.0.0.1:" + 8001),"127.0.0.1", 8001);
     private List<PeerInfo> fingerTable;
-    private List<String> subscriptionList;
+    private ArrayList<String> subscriptionList;
     public PeerInfo predecessor;
     private PeerInfo successor;
     private Listener listener;
@@ -69,7 +69,7 @@ public class Peer {
         System.out.println("succ id: " + successor.id);
         System.out.println("succ id: " + successor.ip);
         System.out.println("succ id: " + successor.port);
-        System.out.println("succ subscription list size: " + successor.subscription.size());
+        System.out.println("succ subscriptionList list size: " + successor.subscriptionList.size());
         System.out.println();
         new Thread(fingersFixer).start();
         new Thread(predecessorFixer).start();
@@ -139,8 +139,7 @@ public class Peer {
     }
 
     void notifySuccessor() {
-        String message = id + " " + ip + " " + port + " " + successor.ip + " " + successor.port;
-        RPC.notifySuccessor(message);
+        RPC.notifySuccessor(new PeerInfo(id, ip, port, subscriptionList), successor.ip, successor.port);
     }
 
     void fix_finger() {
@@ -169,8 +168,8 @@ public class Peer {
         return -1;
     }
 
-    public void fixPredecessor(int peerId, String peerIp, int peerPort) {
-        PeerInfo peerInfo = new PeerInfo(peerId, peerIp, peerPort);
+    public void fixPredecessor(PeerInfo peerInfo) {
+        //PeerInfo peerInfo = new PeerInfo(peerId, peerIp, peerPort);
         System.out.println("I am here on port " + port);
         if (successor.id == id) { // Local peer is the first peer in the ring and currently there are only two peers in the ring.
             successor = peerInfo;
@@ -178,10 +177,20 @@ public class Peer {
         } else if (predecessor == null) {
             System.out.println("I am here to fix predecessor on port " + port);
             predecessor = peerInfo;
-        } else if (predecessor.id > id && (peerId < id || peerId > predecessor.id)) {
+        } else if (predecessor.id > id && (peerInfo.id < id || peerInfo.id > predecessor.id)) {
             predecessor = peerInfo;
-        } else if (predecessor.id < peerId && peerId < id) {
+        } else if (predecessor.id < peerInfo.id && peerInfo.id < id) {
             predecessor = peerInfo;
         }
+    }
+
+    public void quit() {
+        listener.stop();
+        fingersFixer.stop();
+        predecessorFixer.stop();
+        stabilizer.stop();
+        RPC.notifySuccessorChangePredecessor(predecessor, successor);
+        RPC.notifyPredecessorChangeSuccessor(successor, predecessor);
+        RPC.deletePeerFromFingerTable(id);
     }
 }

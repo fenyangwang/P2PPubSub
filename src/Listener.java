@@ -10,6 +10,7 @@ public class Listener implements Runnable {
     private ServerSocket serverSocket;
     private static Peer peer;
     private Socket socket;
+    private boolean startListening;
 
     Listener(Peer peer) {
         this.peer = peer;
@@ -27,9 +28,9 @@ public class Listener implements Runnable {
     @Override
     public void run() {
         System.out.println("server on port " + port + " is running");
-
+        startListening = true;
         int i = 0;
-        while (true) {
+        while (startListening) {
             try {
                 socket = serverSocket.accept();
                 ServerHandler serverHandler = new ServerHandler(socket, peer, i);
@@ -40,6 +41,10 @@ public class Listener implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void stop() {
+        startListening = false;
     }
 
 }
