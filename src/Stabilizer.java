@@ -16,6 +16,7 @@ public class Stabilizer implements Runnable {
                 e.printStackTrace();
             }
         }
+        System.out.println("stabilizer is done");
     }
 
     public void stop() {

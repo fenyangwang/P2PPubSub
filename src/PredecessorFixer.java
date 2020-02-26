@@ -17,6 +17,7 @@ public class PredecessorFixer implements Runnable {
                 e.printStackTrace();
             }
         }
+        System.out.println("predecessorfixer is done");
     }
 
     public void stop() {

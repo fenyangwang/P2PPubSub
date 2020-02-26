@@ -100,10 +100,10 @@ public class RPC {
     }
 
 
-    public static void sendMessage(int port, String message) {
+    public static void sendMessage(String ip, int port, String message) {
         try {
             System.out.println("RPC is sending " + message + " to port " + port);
-            Socket socket = new Socket("127.0.0.1",port);
+            Socket socket = new Socket(ip,port);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             objectOutputStream.writeObject(new Request(null, "test hahahaha"));
@@ -129,7 +129,7 @@ public class RPC {
         Socket socket = null;
         ObjectOutputStream objectOutputStream = null;
         try {
-            socket = new Socket(successor.ip, successor.id);
+            socket = new Socket(successor.ip, successor.port);
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new Request(predecessor, "changePredecessor"));
             objectOutputStream.flush();
@@ -139,6 +139,7 @@ public class RPC {
             try {
                 objectOutputStream.close();
                 socket.close();
+                System.out.println("predecessor is changed");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -150,7 +151,7 @@ public class RPC {
         Socket socket = null;
         ObjectOutputStream objectOutputStream = null;
         try {
-            socket = new Socket(predecessor.ip, predecessor.id);
+            socket = new Socket(predecessor.ip, predecessor.port);
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new Request(successor, "changeSuccessor"));
             objectOutputStream.flush();
@@ -160,6 +161,7 @@ public class RPC {
             try {
                 objectOutputStream.close();
                 socket.close();
+                System.out.println("successor is changed");
             } catch (IOException e) {
                 e.printStackTrace();
             }

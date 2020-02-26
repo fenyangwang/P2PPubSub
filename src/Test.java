@@ -1,3 +1,8 @@
+import javax.net.SocketFactory;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -5,18 +10,14 @@ import java.util.Arrays;
 
 public class Test {
     public static void main(String[] args) {
+        /*try {
+            InetAddress ip = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }*/
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            String str = "127.0.0.1:8009";
-            byte[] bytes = md.digest(str.getBytes());
-            /*for (byte b : bytes) {
-                System.out.print(b + " ");
-            }*/
-            System.out.println();
-            byte b = bytes[bytes.length - 1];
-            int num = ((int)b) & (7);
-            System.out.println(num);
-        } catch (NoSuchAlgorithmException e) {
+            System.out.println(InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
             e.printStackTrace();
         }
     }

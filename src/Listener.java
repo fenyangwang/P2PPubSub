@@ -5,19 +5,21 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Listener implements Runnable {
-    private static String ip;
-    private static int port;
+    private String ip;
+    private InetAddress inetAddress;
+    private int port;
     private ServerSocket serverSocket;
-    private static Peer peer;
+    private Peer peer;
     private Socket socket;
     private boolean startListening;
 
     Listener(Peer peer) {
         this.peer = peer;
-        this.ip = peer.ip;
+        this.ip = peer.inetAddress.getHostAddress();
         this.port = peer.port;
         try {
-            serverSocket = new ServerSocket(this.port);
+            //serverSocket = new ServerSocket(this.port);
+            serverSocket = new ServerSocket(this.port, 50, inetAddress);
             serverSocket.setReuseAddress(true);
         } catch (IOException e) {
             e.printStackTrace();
@@ -38,12 +40,19 @@ public class Listener implements Runnable {
                 thread.start();
                 i++;
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
+                System.out.println("listener is closed");
             }
         }
+        System.out.println("listener is done");
     }
 
     public void stop() {
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         startListening = false;
     }
 

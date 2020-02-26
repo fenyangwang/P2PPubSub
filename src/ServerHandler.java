@@ -28,8 +28,12 @@ public class ServerHandler implements Runnable {
                 notify(request.peerInfo);
             } else if (line.endsWith("findPre")) {
                 findPredecessor(objectOutputStream);
+            } else if (line.endsWith("changePredecessor")) {
+                changePredecessor(request.peerInfo);
+            } else if (line.endsWith("changeSuccessor")) {
+                changeSuccessor(request.peerInfo);
             } else {
-                sendMessage(printWriter);
+                socket.close();
             }
         } catch (IOException e) {
             System.out.println("here is the error on port " + peer.port);
@@ -87,6 +91,14 @@ public class ServerHandler implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void changePredecessor(PeerInfo peerInfo) {
+        peer.setPredecessor(peerInfo);
+    }
+
+    private void changeSuccessor(PeerInfo peerInfo) {
+        peer.setSuccessor(peerInfo);
     }
 
     private void sendMessage(PrintWriter printWriter) {

@@ -1,3 +1,4 @@
+import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -5,23 +6,29 @@ import java.util.*;
 public class Peer {
     private static double gamma;
     int id;
+    InetAddress inetAddress;
     String ip;
     int port;
-
-    private PeerInfo bootPeer = new PeerInfo(getHash("127.0.0.1:" + 8001),"127.0.0.1", 8001);
+    public final static int M = 4;
+    private static final String bootIp = "172.31.4.36";
+    private static final int bootPort = 8001;
+    private PeerInfo bootPeer = new PeerInfo(getHash(bootIp + ":" + bootPort),bootIp, bootPort);
     private List<PeerInfo> fingerTable;
     private ArrayList<String> subscriptionList;
-    public PeerInfo predecessor;
+    private PeerInfo predecessor;
     private PeerInfo successor;
     private Listener listener;
     private FingersFixer fingersFixer;
     private PredecessorFixer predecessorFixer;
     private Stabilizer stabilizer;
 
-    public Peer(String ip, int port) {
-        this.id = getHash(ip + ":" + port);
-        this.ip = ip;
+
+
+    public Peer(InetAddress inetAddress, int port) {
+        this.inetAddress = inetAddress;
+        this.ip = inetAddress.getHostAddress();
         this.port = port;
+        this.id = getHash(ip + ":" + port);
 
         fingerTable = new ArrayList<>();
 
@@ -38,7 +45,7 @@ public class Peer {
     }
 
     void sendMessage(int port, String message) {
-        RPC.sendMessage(port, message);
+        RPC.sendMessage(ip, port, message);
     }
 
 
@@ -47,7 +54,7 @@ public class Peer {
         System.out.println("new node with id: " + id + " ip: " + ip + " port: " + port + " is created");
         successor = new PeerInfo(id, ip, port);
         //successor = null;
-        for (int i = 0; i <= 3; i++) {
+        for (int i = 0; i < M; i++) {
             fingerTable.add(null);
         }
     }
@@ -84,6 +91,14 @@ public class Peer {
         return predecessor;
     }
 
+    public void setPredecessor(PeerInfo predecessor) {
+        this.predecessor = predecessor;
+    }
+
+    public void setSuccessor(PeerInfo successor) {
+        this.successor = successor;
+    }
+
     PeerInfo findSuccessor(int targetId) {
         if (id == successor.id) {
             return successor;
@@ -104,7 +119,7 @@ public class Peer {
     PeerInfo getClosetPrecedingPeer(int peerId) {
         int max = -1;
         int entryIndex = -1;
-        for (int i = 3; i >= 0; i--) {
+        for (int i = M - 1; i >= 0; i--) {
             PeerInfo peerInfo = fingerTable.get(i);
             if (peerInfo == null) {
                 continue;
@@ -140,14 +155,6 @@ public class Peer {
 
     void notifySuccessor() {
         RPC.notifySuccessor(new PeerInfo(id, ip, port, subscriptionList), successor.ip, successor.port);
-    }
-
-    void fix_finger() {
-
-    }
-
-    void check_predecessor() {
-
     }
 
     void updateFingerTable(int index, PeerInfo peerInfo) {
@@ -191,6 +198,7 @@ public class Peer {
         stabilizer.stop();
         RPC.notifySuccessorChangePredecessor(predecessor, successor);
         RPC.notifyPredecessorChangeSuccessor(successor, predecessor);
-        RPC.deletePeerFromFingerTable(id);
+        //RPC.deletePeerFromFingerTable(id);
+        System.out.println("all set");
     }
 }
