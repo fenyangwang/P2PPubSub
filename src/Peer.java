@@ -12,7 +12,8 @@ public class Peer implements PubSub {
     String ip;
     int port;
     public final static int M = 4;
-    private static final String bootIp = "172.31.4.36";
+    //private static final String bootIp = "172.31.4.36";
+    private static final String bootIp = "172.31.144.91";
     private static final int bootPort = 8001;
     private PeerInfo bootPeer = new PeerInfo(getHash(bootIp + ":" + bootPort),bootIp, bootPort);
     private List<PeerInfo> fingerTable;
@@ -102,7 +103,9 @@ public class Peer implements PubSub {
         if (id == successor.id) {
             return successor;
         }
-
+        if (id == targetId) {
+            return new PeerInfo(id, ip, port, subscriptionList);
+        }
         if (id > successor.id) {
             if (targetId > id || targetId <= successor.id) {
                 return successor;
@@ -124,7 +127,7 @@ public class Peer implements PubSub {
                 continue;
             }
             int entryId = fingerTable.get(i).id;
-            if (entryId < peerId) {
+            if (entryId <= peerId) {
                 if (entryId > max) {
                     max = entryId;
                     entryIndex = i;
@@ -183,9 +186,9 @@ public class Peer implements PubSub {
         } else if (predecessor == null) {
             // System.out.println("I am here to fix predecessor on port " + port);
             predecessor = peerInfo;
-        } else if (predecessor.id > id && (peerInfo.id < id || peerInfo.id > predecessor.id)) {
+        } else if (predecessor.id > id && (peerInfo.id < id || peerInfo.id >= predecessor.id)) {
             predecessor = peerInfo;
-        } else if (predecessor.id < peerInfo.id && peerInfo.id < id) {
+        } else if (predecessor.id <= peerInfo.id && peerInfo.id < id) {
             predecessor = peerInfo;
         }
     }

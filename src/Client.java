@@ -12,20 +12,19 @@ public class Client{
     public static void main(String[] args) {
         InetAddress inetAddress = null;
         try {
-            inetAddress = InetAddress.getLocalHost();
+            inetAddress = InetAddress.getLocalHost(); // 172.31.144.91
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        Peer p = new Peer(inetAddress, PORT);// boot peer
-        // Peer p = new Peer("127.0.0.1", 8001);// boot peer
-        // Peer p = new Peer("127.0.0.1", 8002);
-        // Peer p = new Peer("127.0.0.1", 8003);
-        // Peer p = new Peer("127.0.0.1", 8004);
-        // Peer p = new Peer("127.0.0.1", 8005);
-        // Peer p = new Peer("127.0.0.1", 8006);
-        // Peer p = new Peer("127.0.0.1", 8007);
-        // Peer p = new Peer("127.0.0.1", 8008);
-        // Peer p = new Peer("127.0.0.1", 8009);
+        //Peer p = new Peer(inetAddress, PORT);// boot peer 4: 1, 7 / 7 7 8 12
+        Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
+        //Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
+        //Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
+        //Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
+        //Peer p = new Peer(inetAddress, 8006); // 9: 8, 11 / 11 11 15 1
+        //Peer p = new Peer(inetAddress, 8010); // 8: 7. 9 / 9 11 12 0
+        //Peer p = new Peer(inetAddress, 8011); // 7: 4, 8 / 8 9 11 15
+        //Peer p = new Peer(inetAddress, 8012); // 0: 15, 1 / 1 4 4 8
         p.join();
         
         Scanner scanner = new Scanner(System.in);

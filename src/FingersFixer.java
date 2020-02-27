@@ -19,24 +19,31 @@ public class FingersFixer implements Runnable {
         // int count = 0;
         while (startFixing) {
             // System.out.println("in fingers fixer");
-            // if (peer.getPredecessor() == null) {
-            //     System.out.println("predecessor: null");
-            // } else {
-            //     System.out.println("predecessor: " + peer.getPredecessor().id);
-            // }
-            // System.out.println("successor: " + peer.getSuccessor().id);
+            if (peer.getPredecessor() == null) {
+                 System.out.println("predecessor: null");
+            } else {
+                 System.out.println("predecessor: " + peer.getPredecessor().id);
+            }
+            System.out.println("successor: " + peer.getSuccessor().id);
 
             for (int i = 0; i < m; i++) {
                 int val = (int) (peer.id + Math.pow(2, i)) % (int)Math.pow(2, m);
                 PeerInfo peerInfo = peer.findSuccessor(val);
-                //System.out.println("entry " + i + " " + peerInfo.id);
-                //peer.updateFingerTable(i, peerInfo);
+                if (peerInfo == null) {
+                    System.out.println("peerInfo is null, Entry " + i + " is offline, set this entry as null");
+                    peer.updateFingerTable(i, null);
+                } else {
+                    System.out.println("entry " + i + " " + peerInfo.id);
+                }
+
                 try {
-                    Socket socket = new Socket(peerInfo.ip, peerInfo.port);
-                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                    objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), "test"));
-                    socket.close();
-                    peer.updateFingerTable(i, peerInfo);
+                    if (peerInfo != null) {
+                        Socket socket = new Socket(peerInfo.ip, peerInfo.port);
+                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+                        objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), "test"));
+                        socket.close();
+                        peer.updateFingerTable(i, peerInfo);
+                    }
                 } catch (IOException e) {
                     System.out.println("Entry " + i + " is offline, set this entry as null");
                     peer.updateFingerTable(i, null);

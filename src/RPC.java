@@ -21,21 +21,18 @@ public class RPC {
 
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             successorInfo = (PeerInfo) objectInputStream.readObject();
+            objectOutputStream.close();
+            objectInputStream.close();
+            socket.close();
+            return successorInfo;
         } catch (BindException e) {
             System.out.println("error happans when creating socket with port: " + desPort);
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("destination ip is closed, return null");
+            return null;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                objectInputStream.close();
-                socket.close();
-                return successorInfo;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
         return null;
     }

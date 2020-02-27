@@ -112,6 +112,7 @@ public class ServerHandler implements Runnable {
         peer.setSuccessor(peerInfo);
     }
 
+
     // private void sendMessage(PrintWriter printWriter) {
     //     try {
     //         printWriter = new PrintWriter(socket.getOutputStream());
