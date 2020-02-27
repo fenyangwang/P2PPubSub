@@ -9,7 +9,7 @@ public class PredecessorFixer implements Runnable {
     public void run() {
         startFixing = true;
         while (startFixing) {
-            System.out.println("in predecessorfixing");
+            // System.out.println("in predecessorfixing");
             peer.notifySuccessor();
             try {
                 Thread.sleep(1000);

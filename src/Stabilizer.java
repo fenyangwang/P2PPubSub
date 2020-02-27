@@ -8,7 +8,7 @@ public class Stabilizer implements Runnable {
     public void run() {
         startStabilizing = true;
         while (startStabilizing) {
-            System.out.println("in stabilizing");
+            // System.out.println("in stabilizing");
             peer.stabilize();
             try {
                 Thread.sleep(1000);

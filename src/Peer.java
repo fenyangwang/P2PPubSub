@@ -3,8 +3,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-public class Peer {
-    private static double gamma;
+public class Peer implements PubSub {
+    public static final double GAMMA = 0.5;
+    public static final int TOTAL_NUM = 10;
+
     int id;
     InetAddress inetAddress;
     String ip;
@@ -14,7 +16,8 @@ public class Peer {
     private static final int bootPort = 8001;
     private PeerInfo bootPeer = new PeerInfo(getHash(bootIp + ":" + bootPort),bootIp, bootPort);
     private List<PeerInfo> fingerTable;
-    private ArrayList<String> subscriptionList;
+    Set<Category> subscriptionList;
+    private Set<Message> processedMsgSet;
     private PeerInfo predecessor;
     private PeerInfo successor;
     private Listener listener;
@@ -30,9 +33,10 @@ public class Peer {
         this.port = port;
         this.id = getHash(ip + ":" + port);
 
-        fingerTable = new ArrayList<>();
-
-        subscriptionList = new ArrayList<>();
+        this.fingerTable = new ArrayList<>();
+        this.subscriptionList = new HashSet<>();
+        // this.subscriptionList.add(Category.CAT);
+        this.processedMsgSet = new HashSet<>();
 
         this.listener = new Listener(this);
         this.fingersFixer = new FingersFixer(this);
@@ -43,11 +47,6 @@ public class Peer {
 
         create();
     }
-
-    void sendMessage(int port, String message) {
-        RPC.sendMessage(ip, port, message);
-    }
-
 
     void create() {
         predecessor = null;
@@ -177,18 +176,71 @@ public class Peer {
 
     public void fixPredecessor(PeerInfo peerInfo) {
         //PeerInfo peerInfo = new PeerInfo(peerId, peerIp, peerPort);
-        System.out.println("I am here on port " + port);
+        // System.out.println("I am here on port " + port);
         if (successor.id == id) { // Local peer is the first peer in the ring and currently there are only two peers in the ring.
             successor = peerInfo;
             predecessor = peerInfo;
         } else if (predecessor == null) {
-            System.out.println("I am here to fix predecessor on port " + port);
+            // System.out.println("I am here to fix predecessor on port " + port);
             predecessor = peerInfo;
         } else if (predecessor.id > id && (peerInfo.id < id || peerInfo.id > predecessor.id)) {
             predecessor = peerInfo;
         } else if (predecessor.id < peerInfo.id && peerInfo.id < id) {
             predecessor = peerInfo;
         }
+    }
+
+    // Disseminate message from user command
+    @Override
+    public void disseminate(Message msg) {
+        if (msg == null) {
+            return;
+        }
+        System.out.printf("Preparing to disseminate the message with content: %s, category: %s, created by: %s : %d, created at: %d, ttl is %d.\n", 
+                            msg.getContent(), msg.getCategory().toString(), msg.getSenderIP(), msg.getSenderPort(), msg.getTimeStamp(), msg.getTTL());
+
+        // If the message has already been processed, return
+        if (!processedMsgSet.add(msg)) {
+            System.out.println("The message has been processed so discard it!");
+            return;
+        }
+        // If the message's TTL is 0
+        if (msg == null || msg.decreaseTTL() == -1) {
+            System.out.println("The TTL of message is 0 so discard it!");
+            return;
+        }
+        // Start to disseminate the message
+        int gammaNo = (int)(TOTAL_NUM * GAMMA);
+        Random ran = new Random();
+        System.out.println("\n############## Start to desseminate the message #################");
+        Set<PeerInfo> processedPeer = new HashSet<>();
+        for (PeerInfo peer : fingerTable) {
+            // Avoid sending message to the same peer multiple times and avoid send to itself
+            if (!processedPeer.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
+                continue;
+            }
+            // Send message to all neighbour subscribers
+            if (peer.subscriptionList.contains(msg.getCategory())) {
+                System.out.println("\n----------------------------------------");
+                System.out.printf("Send this message object (TTL: %d) to the subscriber neighbor ip: %s, port: %d\n", msg.getTTL(), peer.ip, peer.port);
+                System.out.println("----------------------------------------");
+                RPC.sendMessage(peer, msg);
+            } else { // Gossip to the remaining neighbours
+                if (ran.nextInt(TOTAL_NUM) < gammaNo) {
+                    System.out.println("\n****************************************");
+                    System.out.printf("Gossip this message object (TTL: %d) to the non-subscriber neighbor ip: %s, port: %d\n",msg.getTTL(), peer.ip, peer.port);
+                    System.out.println("****************************************");
+                    RPC.sendMessage(peer, msg);
+                }
+            }
+        }
+        System.out.println("############## Dessemination finished ##################");
+    }
+
+    // Update the subscription list
+    @Override
+    public void updateSubList() {
+    // TODO
     }
 
     public void quit() {

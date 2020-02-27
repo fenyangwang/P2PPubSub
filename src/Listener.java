@@ -1,11 +1,9 @@
 import java.io.*;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Listener implements Runnable {
-    private String ip;
     private InetAddress inetAddress;
     private int port;
     private ServerSocket serverSocket;
@@ -15,7 +13,6 @@ public class Listener implements Runnable {
 
     Listener(Peer peer) {
         this.peer = peer;
-        this.ip = peer.inetAddress.getHostAddress();
         this.port = peer.port;
         try {
             //serverSocket = new ServerSocket(this.port);
@@ -40,7 +37,6 @@ public class Listener implements Runnable {
                 thread.start();
                 i++;
             } catch (IOException e) {
-                //e.printStackTrace();
                 System.out.println("listener is closed");
             }
         }

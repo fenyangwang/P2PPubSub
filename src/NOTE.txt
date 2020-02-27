@@ -1,0 +1,6 @@
+1. warnings
+2. chord process keep printing
+    2.1 enlarge thread sleeping time
+    2.2 add all print codes into one function
+3. user commands format
+4. will boot peer notify its subscription list?

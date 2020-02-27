@@ -1,12 +1,9 @@
 import java.io.*;
 import java.net.BindException;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 public class RPC {
+    
     public static PeerInfo findSuccessor(String message) {
         Socket socket = null;
         ObjectOutputStream objectOutputStream = null;
@@ -19,7 +16,7 @@ public class RPC {
         try {
             socket = new Socket(desIp, desPort);
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(new Request(null, targetId + " findSucc"));
+            objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), targetId + " findSucc"));
             objectOutputStream.flush();
 
             objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -31,12 +28,10 @@ public class RPC {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-
             try {
                 objectOutputStream.close();
                 objectInputStream.close();
                 socket.close();
-
                 return successorInfo;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -57,7 +52,6 @@ public class RPC {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-
             try {
                 objectOutputStream.close();
                 socket.close();
@@ -78,7 +72,7 @@ public class RPC {
         try {
             socket = new Socket(desIp, desPort);
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(new Request(null, "findPre"));
+            objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), "findPre"));
             objectOutputStream.flush();
 
             objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -88,35 +82,31 @@ public class RPC {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-
             try {
                 objectOutputStream.close();
                 socket.close();
+                return predecessorInfo;
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return predecessorInfo;
         }
+        return null;
     }
-
-
-    public static void sendMessage(String ip, int port, String message) {
+    
+    // Send object message by TCP
+    public static void sendMessage(PeerInfo peerInfo, Message msg) {
         try {
-            System.out.println("RPC is sending " + message + " to port " + port);
-            Socket socket = new Socket(ip,port);
+            // System.out.println("RPC is sending message or object");
+            Socket socket = new Socket(peerInfo.ip,peerInfo.port);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            objectOutputStream.writeObject(new Request(null, "test hahahaha"));
+            objectOutputStream.writeObject(new Request(msg, "disseminate"));
             objectOutputStream.flush();
 
-            System.out.println("11111");
             String line = bufferedReader.readLine();
-            System.out.println("22222");
-
-            System.out.println(line + " from RPC on port " + port);
-
-            System.out.println("33333");
-
+            if (line != null) {
+                System.out.println(line + " from RPC on port " + peerInfo.port);
+            }
             objectOutputStream.close();
             bufferedReader.close();
             socket.close();
