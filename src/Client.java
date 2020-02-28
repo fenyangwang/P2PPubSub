@@ -1,6 +1,9 @@
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Client{
@@ -42,9 +45,14 @@ public class Client{
                                                     MAXTTL, inetAddress.toString(), PORT);
                         p.disseminate(msg);
                     }
-                } else if (command.startsWith("subscribe")) {
-                    // TODO
-                    // use command format like 'subscribe -category cat' and unsubscribe -category cat 
+                } else if (command.startsWith("subscribe") || command.startsWith("unsubscribe")) {
+                    // use command format like 'subscribe -category cat' and unsubscribe -category cat
+
+                    // True - to add, False - to remove
+                    boolean subAction = command.startsWith("subscribe") ? true : false;
+                    List<Category> categoryList = parseSubCommand(command);
+                    if (categoryList != null)
+                        p.updateSubList(categoryList, subAction);
                 }
             }
         } catch (Exception ex) {
@@ -80,5 +88,26 @@ public class Client{
         System.out.println("User input message content: " + commandsMap.get(CONTENT));
 
         return commandsMap;
+    }
+
+    static private List<Category> parseSubCommand(String cmdString) {
+        List<Category> categoryList = new ArrayList<>();
+        String[] args = cmdString.split(" ");
+        if ( (args.length < 3) || (!args[1].equals(CATEGORY)) ) {
+            System.out.println("Lack of arguments: command must be given as: subscribe -category cat");
+            return null;
+        } else {
+            for (String arg: Arrays.copyOfRange(args, 2, args.length)) {
+                try {
+                    Category category = Category.valueOf(arg.toUpperCase());
+                    categoryList.add(category);
+                } catch (IllegalArgumentException ex) {
+                    System.out.println(ex.getMessage());
+                    System.out.println("Invalid category: " + arg + ", Expect: CAT, DOG, BIRD, RABBIT");
+                    return null;
+                }
+            }
+            return categoryList;
+        }
     }
 }
