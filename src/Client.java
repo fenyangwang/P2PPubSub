@@ -16,7 +16,7 @@ public class Client{
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        Peer p = new Peer(inetAddress, PORT);// boot peer
+        Peer p = new Peer(inetAddress, PORT);
         // Peer p = new Peer("127.0.0.1", 8001);// boot peer
         // Peer p = new Peer("127.0.0.1", 8002);
         // Peer p = new Peer("127.0.0.1", 8003);
