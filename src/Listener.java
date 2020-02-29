@@ -13,6 +13,7 @@ public class Listener implements Runnable {
 
     Listener(Peer peer) {
         this.peer = peer;
+        this.inetAddress = peer.inetAddress;
         this.port = peer.port;
         try {
             //serverSocket = new ServerSocket(this.port);

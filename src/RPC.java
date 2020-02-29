@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.BindException;
 import java.net.Socket;
+import java.util.List;
+
 
 public class RPC {
     
@@ -21,21 +23,18 @@ public class RPC {
 
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             successorInfo = (PeerInfo) objectInputStream.readObject();
+            objectOutputStream.close();
+            objectInputStream.close();
+            socket.close();
+            return successorInfo;
         } catch (BindException e) {
             System.out.println("error happans when creating socket with port: " + desPort);
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("destination ip is closed, return null");
+            return null;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                objectInputStream.close();
-                socket.close();
-                return successorInfo;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
         return null;
     }
@@ -49,15 +48,11 @@ public class RPC {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new Request(peerInfo, "notify"));
             objectOutputStream.flush();
+
+            objectOutputStream.close();
+            socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            System.err.println("Successor might be offline, from RPC");
         }
     }
 
@@ -77,18 +72,15 @@ public class RPC {
 
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             predecessorInfo = (PeerInfo) objectInputStream.readObject();
+
+            objectInputStream.close();
+            objectOutputStream.close();
+            socket.close();
+            return predecessorInfo;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Predecessor might be offline, from RPC.");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                socket.close();
-                return predecessorInfo;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
         return null;
     }
@@ -123,17 +115,13 @@ public class RPC {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new Request(predecessor, "changePredecessor"));
             objectOutputStream.flush();
+
+            objectOutputStream.close();
+            socket.close();
+
+            System.out.println("predecessor is changed");
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                socket.close();
-                System.out.println("predecessor is changed");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
     }
 
@@ -145,21 +133,70 @@ public class RPC {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new Request(successor, "changeSuccessor"));
             objectOutputStream.flush();
+
+            objectOutputStream.close();
+            socket.close();
+
+            System.out.println("successor is changed");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean isPeerAlive(PeerInfo peerInfo) {
+        try {
+            Socket socket = new Socket(peerInfo.ip, peerInfo.port);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), "test"));
+            objectOutputStream.close();
+            socket.close();
+            return true;
+        } catch (IOException e) {
+            System.out.println("can't reach peer " + peerInfo.id);
+            return false;
+        }
+    }
+
+    public static void notifyNeighborUpdateSub(PeerInfo currentPeer, PeerInfo neighborPeer) {
+        Socket socket = null;
+        ObjectOutputStream objectOutputStream = null;
+
+        try {
+            socket = new Socket(neighborPeer.ip, neighborPeer.port);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(currentPeer, "updateSub"));
+            objectOutputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
                 objectOutputStream.close();
                 socket.close();
-                System.out.println("successor is changed");
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
-    public static void deletePeerFromFingerTable(int id) {
+    public static void sendCategoryUpdate(List<Category> newCategories, Message msg, PeerInfo neighborPeer) {
+        Socket socket = null;
+        ObjectOutputStream objectOutputStream = null;
 
+        try {
+            socket = new Socket(neighborPeer.ip, neighborPeer.port);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(newCategories, msg,"updateCategory"));
+            objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                objectOutputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
 }
