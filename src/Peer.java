@@ -25,6 +25,7 @@ public class Peer implements PubSub {
     Set<Category> validCategorySet;
     Set<Category> subscriptionList;
     private Set<Message> processedMsgSet;
+    private Set<Message> processedNewCategMsgSet;
     private PeerInfo predecessor;
     private PeerInfo successor;
     private Listener listener;
@@ -247,11 +248,6 @@ public class Peer implements PubSub {
     }
 
     void updateSubscriptionList(PeerInfo peerInfo) {
-        // TODO -- change PeerInfo to subscriptionList
-/*        List<PeerInfo> newFingerTable = fingerTable.stream()
-                .map(o -> o.id == peerInfo.id ? peerInfo : o)
-                .collect(Collectors.toList());
-        Collections.copy(fingerTable, newFingerTable);*/
         List<PeerInfo> newNeiList = neiList.stream()
                 .map(o -> o.id == peerInfo.id ? peerInfo : o)
                 .collect(Collectors.toList());
@@ -376,16 +372,14 @@ public class Peer implements PubSub {
     }
 
     public void gossipCategory(List<Category> newCategoryList, Message msg) {
-        // If the message has already been processed, return
-        // TODO -- need use another processedMsgSet to handle message in gossipCategory
-        if (!processedMsgSet.add(msg)) {
-            System.out.println("The message has been processed so discard it!");
+        if (!processedNewCategMsgSet.add(msg)) {
+            System.out.println("The new category message has been processed so discard it!");
             return;
         }
 
         // If the message's TTL is 0
         if (msg.decreaseTTL() == -1) {
-            System.out.println("The TTL of message is 0 so discard it!");
+            System.out.println("The TTL of new category message is 0 so discard it!");
             return;
         }
 

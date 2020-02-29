@@ -7,8 +7,6 @@ public class Request implements Serializable {
     public PeerInfo peerInfo;
     public String command;
     public Message message;
-    // TODO
-    // public Set<Category> subscriptionList;  // for wfy
     public List<Category> categories;
 
     public Request(PeerInfo peerInfo, String command) {
