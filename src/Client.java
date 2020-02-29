@@ -16,8 +16,8 @@ public class Client{
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        //Peer p = new Peer(inetAddress, PORT);// boot peer 4: 1, 7 / 7 7 8 12
-        Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
+        Peer p = new Peer(inetAddress, PORT);// boot peer 4: 1, 7 / 7 7 8 12
+        //Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
         //Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
         //Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
         //Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7

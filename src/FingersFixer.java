@@ -24,7 +24,12 @@ public class FingersFixer implements Runnable {
             } else {
                  System.out.println("predecessor: " + peer.getPredecessor().id);
             }
-            System.out.println("successor: " + peer.getSuccessor().id);
+
+            if (peer.getSuccessor() != null) {
+                System.out.println("successor: " + peer.getSuccessor().id);
+            } else {
+                System.out.println("successor: null");
+            }
 
             for (int i = 0; i < m; i++) {
                 int val = (int) (peer.id + Math.pow(2, i)) % (int)Math.pow(2, m);
@@ -35,19 +40,30 @@ public class FingersFixer implements Runnable {
                 } else {
                     System.out.println("entry " + i + " " + peerInfo.id);
                 }
+                if (peerInfo != null) {
+                    boolean isAlive = RPC.isPeerAlive(peerInfo);
+                    if (isAlive) {
+                        peer.updateFingerTable(i, peerInfo);
+                        //peerInfo.showDetails();
+                    } else {
+                        System.out.println("Entry " + i + " is offline, set this entry as null");
+                        peer.updateFingerTable(i, null);
+                    }
+                }
 
-                try {
+               /* try {
                     if (peerInfo != null) {
                         Socket socket = new Socket(peerInfo.ip, peerInfo.port);
                         ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                         objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), "test"));
                         socket.close();
                         peer.updateFingerTable(i, peerInfo);
+                        //peerInfo.showDetails();
                     }
                 } catch (IOException e) {
                     System.out.println("Entry " + i + " is offline, set this entry as null");
                     peer.updateFingerTable(i, null);
-                }
+                }*/
             }
             try {
                 Thread.sleep(1000);
