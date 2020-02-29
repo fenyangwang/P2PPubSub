@@ -19,7 +19,7 @@ public class FingersFixer implements Runnable {
         // int count = 0;
         while (startFixing) {
             // System.out.println("in fingers fixer");
-            if (peer.getPredecessor() == null) {
+/*            if (peer.getPredecessor() == null) {
                  System.out.println("predecessor: null");
             } else {
                  System.out.println("predecessor: " + peer.getPredecessor().id);
@@ -29,16 +29,16 @@ public class FingersFixer implements Runnable {
                 System.out.println("successor: " + peer.getSuccessor().id);
             } else {
                 System.out.println("successor: null");
-            }
+            }*/
 
             for (int i = 0; i < m; i++) {
                 int val = (int) (peer.id + Math.pow(2, i)) % (int)Math.pow(2, m);
                 PeerInfo peerInfo = peer.findSuccessor(val);
                 if (peerInfo == null) {
-                    System.out.println("peerInfo is null, Entry " + i + " is offline, set this entry as null");
+                    //System.out.println("peerInfo is null, Entry " + i + " is offline, set this entry as null");
                     peer.updateFingerTable(i, null);
                 } else {
-                    System.out.println("entry " + i + " " + peerInfo.id);
+                    //System.out.println("entry " + i + " " + peerInfo.id);
                 }
                 if (peerInfo != null) {
                     boolean isAlive = RPC.isPeerAlive(peerInfo);
@@ -46,7 +46,7 @@ public class FingersFixer implements Runnable {
                         peer.updateFingerTable(i, peerInfo);
                         //peerInfo.showDetails();
                     } else {
-                        System.out.println("Entry " + i + " is offline, set this entry as null");
+                        //System.out.println("Entry " + i + " is offline, set this entry as null");
                         peer.updateFingerTable(i, null);
                     }
                 }

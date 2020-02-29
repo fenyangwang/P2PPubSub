@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Peer implements PubSub {
-    public static final double GAMMA = 0.5;
+    public static final double GAMMA = 0.8;
     public static final int TOTAL_NUM = 10;
 
     int id;
@@ -15,12 +15,14 @@ public class Peer implements PubSub {
     public final static int M = 4;
     //private static final String bootIp = "172.31.4.36"; // EC2
     //private static final String bootIp = "172.31.144.91"; // XHG
-    private static final String bootIp = "172.31.134.108"; // WFY
+    //private static final String bootIp = "172.31.134.108"; // WFY
+    private static final String bootIp = "192.168.0.16"; // WFY Home
 
     private static final int bootPort = 8001;
     private PeerInfo bootPeer = new PeerInfo(getHash(bootIp + ":" + bootPort),bootIp, bootPort);
     private List<PeerInfo> neiList;
     private List<PeerAddress> fingerTable;
+    Set<Category> validCategorySet;
     Set<Category> subscriptionList;
     private Set<Message> processedMsgSet;
     private PeerInfo predecessor;
@@ -41,6 +43,12 @@ public class Peer implements PubSub {
 
         this.neiList = new ArrayList<>();
         this.fingerTable = new ArrayList<>();
+        this.validCategorySet = new HashSet<>();
+        // default valid categories: CAT, DOG, BIRD, RABBIT
+        this.validCategorySet.add(new Category("CAT"));
+        this.validCategorySet.add(new Category("DOG"));
+        this.validCategorySet.add(new Category("BIRD"));
+        this.validCategorySet.add(new Category("RABBIT"));
         this.subscriptionList = new HashSet<>();
         // this.subscriptionList.add(Category.CAT);
         this.processedMsgSet = new HashSet<>();
@@ -173,12 +181,12 @@ public class Peer implements PubSub {
 
     public void checkPredecessor() {
         if (predecessor == null) {
-            System.out.println("predecessor is null, no need to check");
+            //System.out.println("predecessor is null, no need to check");
             return;
         }
         boolean isAlive = RPC.isPeerAlive(predecessor);
         if (!isAlive) {
-            System.out.println("predecessor is offline");
+            //System.out.println("predecessor is offline");
             PeerAddress newPredecessor = predecessor.predecessorAddress;
             predecessor = new PeerInfo(newPredecessor.getId(), newPredecessor.getIp(), newPredecessor.getPort());
         }
@@ -197,17 +205,17 @@ public class Peer implements PubSub {
 
     public void checkSuccessor() {
         if (successor == null) {
-            System.out.println("successor is null, no need to check");
+            //System.out.println("successor is null, no need to check");
             return;
         }
         boolean isAlive = RPC.isPeerAlive(successor);
         if (!isAlive) {
-            System.out.println("successor is offline");
+            //System.out.println("successor is offline");
             PeerAddress newSuccessor = successor.successorAddress;
             if (newSuccessor != null) {
                 successor = new PeerInfo(newSuccessor.getId(), newSuccessor.getIp(), newSuccessor.getPort());
             } else {
-                System.out.println("new successor is null");
+                //System.out.println("new successor is null");
             }
         }
         /*try {
@@ -239,6 +247,7 @@ public class Peer implements PubSub {
     }
 
     void updateSubscriptionList(PeerInfo peerInfo) {
+        // TODO -- change PeerInfo to subscriptionList
 /*        List<PeerInfo> newFingerTable = fingerTable.stream()
                 .map(o -> o.id == peerInfo.id ? peerInfo : o)
                 .collect(Collectors.toList());
@@ -353,6 +362,51 @@ public class Peer implements PubSub {
             System.out.printf("Notify neighbor -- ip = %s, port = %d\n", peer.ip, peer.port);
             RPC.notifyNeighborUpdateSub(localPeerInfo, peer);
         }
+        System.out.println("... Notification of Updated Subscription finished ...");
+    }
+
+    // Add the new category
+    public void addCategory(List<Category> newCategoryList) {
+        System.out.println("Updating local valid category set ...");
+        for (Category newCategory: newCategoryList) {
+            validCategorySet.add(newCategory);
+        }
+        int maxTTL = 5;
+        gossipCategory(newCategoryList, new Message(maxTTL, ip, port));
+    }
+
+    public void gossipCategory(List<Category> newCategoryList, Message msg) {
+        // If the message has already been processed, return
+        // TODO -- need use another processedMsgSet to handle message in gossipCategory
+        if (!processedMsgSet.add(msg)) {
+            System.out.println("The message has been processed so discard it!");
+            return;
+        }
+
+        // If the message's TTL is 0
+        if (msg.decreaseTTL() == -1) {
+            System.out.println("The TTL of message is 0 so discard it!");
+            return;
+        }
+
+        int gammaNo = (int)(TOTAL_NUM * GAMMA);
+        Random ran = new Random();
+        System.out.println("\n############## Start to broadcast the new categories #################");
+        Set<PeerInfo> processedPeer = new HashSet<>();
+        for (PeerInfo peer : neiList) {
+            // Avoid sending message to the same peer multiple times and avoid send to itself
+            if (!processedPeer.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
+                continue;
+            }
+            // Gossip to the neighbours
+            if (ran.nextInt(TOTAL_NUM) < gammaNo) {
+                System.out.println("\n****************************************");
+                System.out.printf("Gossip new categories to neighbor -- ip: %s, port: %d\n", peer.ip, peer.port);
+                System.out.println("****************************************");
+                RPC.sendCategoryUpdate(newCategoryList, msg, peer);
+            }
+        }
+        System.out.println("############## Gossip finished ##################");
     }
 
     public void quit() {

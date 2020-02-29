@@ -19,6 +19,15 @@ public class Message implements Serializable {
         this.generatedTime = System.nanoTime();
     }
 
+    public Message(int maxTTL, String senderIP, int senderPort) {
+        this.ttl = maxTTL;
+        this.content = null;
+        this.category = null;
+        this.senderIP = senderIP;
+        this.senderPort = senderPort;
+        this.generatedTime = System.nanoTime();
+    }
+
     // Get the value of TTL
 	public int getTTL() {
         return this.ttl;

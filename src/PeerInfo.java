@@ -7,6 +7,7 @@ public class PeerInfo implements Serializable {
     int id;
     String ip;
     int port;
+    Set<Category> validCategorySet;
     Set<Category> subscriptionList;
     List<PeerAddress> fingerTable;
     PeerAddress successorAddress;
@@ -55,6 +56,7 @@ public class PeerInfo implements Serializable {
         this.id = id;
         this.ip = ip;
         this.port = port;
+        validCategorySet = new HashSet<Category>();
         subscriptionList = new HashSet<Category>();
     }
     
@@ -62,7 +64,16 @@ public class PeerInfo implements Serializable {
         this.id = id;
         this.ip = ip;
         this.port = port;
+        validCategorySet = new HashSet<Category>();
         this.subscriptionList = subscriptionList;
+    }
+
+    PeerInfo(Set<Category> validCategorySet, int id, String ip, int port) {
+        this.validCategorySet = validCategorySet;
+        this.id = id;
+        this.ip = ip;
+        this.port = port;
+        subscriptionList = new HashSet<Category>();
     }
 
     @Override

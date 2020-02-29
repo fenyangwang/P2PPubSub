@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.BindException;
 import java.net.Socket;
+import java.util.List;
+
 
 public class RPC {
     
@@ -176,6 +178,25 @@ public class RPC {
         }
     }
 
+    public static void sendCategoryUpdate(List<Category> newCategories, Message msg, PeerInfo neighborPeer) {
+        Socket socket = null;
+        ObjectOutputStream objectOutputStream = null;
 
+        try {
+            socket = new Socket(neighborPeer.ip, neighborPeer.port);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(newCategories, msg,"updateCategory"));
+            objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                objectOutputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }

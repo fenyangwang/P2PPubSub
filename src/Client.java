@@ -22,12 +22,13 @@ public class Client{
         //Peer p = new Peer(inetAddress, PORT);// boot peer 4: 1, 7 / 7 7 8 12
         //Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
         //Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
-        //Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
+        Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
         //Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
         //Peer p = new Peer(inetAddress, 8006); // 9: 8, 11 / 11 11 15 1
         //Peer p = new Peer(inetAddress, 8010); // 8: 7. 9 / 9 11 12 0
         //Peer p = new Peer(inetAddress, 8011); // 7: 4, 8 / 8 9 11 15
-        Peer p = new Peer(inetAddress, 8012); // 0: 15, 1 / 1 4 4 8
+        //Peer p = new Peer(inetAddress, 8012); // 0: 15, 1 / 1 4 4 8
+
         p.join();
         
         Scanner scanner = new Scanner(System.in);
@@ -40,7 +41,7 @@ public class Client{
                 } else if (command.startsWith("publish")) {
                     HashMap<String, String> commands;
                     if ((commands = parsePubCommand(command)) != null) {
-                        Message msg = new Message(commands.get(CONTENT), Category.valueOf(commands.get(CATEGORY)), 
+                        Message msg = new Message(commands.get(CONTENT), new Category(commands.get(CATEGORY)),
                                                     MAXTTL, inetAddress.toString(), PORT);
                         p.disseminate(msg);
                     }
@@ -49,9 +50,27 @@ public class Client{
 
                     // True - to add, False - to remove
                     boolean subAction = command.startsWith("subscribe") ? true : false;
-                    List<Category> categoryList = parseSubCommand(command);
-                    if (categoryList != null)
-                        p.updateSubList(categoryList, subAction);
+                    List<Category> categoryList = parseSubCommand(command, p);
+                    if (categoryList != null) {
+                        for (Category c: categoryList) {
+                            if (!p.validCategorySet.contains(c)) {
+                                categoryList.remove(c);
+                                System.out.println("Invalid category: " + c.toString() +
+                                        ", not found in current valid categories!");
+                            }
+                        }
+                        if (categoryList.size() > 0)
+                            p.updateSubList(categoryList, subAction);
+                    }
+                } else if (command.startsWith("addcategory")) {
+                    String[] cmdArgs = command.split(" ");
+                    List<Category> newCategoryList = new ArrayList<>();
+                    for (String name: Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length)) {
+                        Category c = new Category(name);
+                        newCategoryList.add(c);
+                    }
+                    if (newCategoryList.size() > 0)
+                        p.addCategory(newCategoryList);
                 }
             }
         } catch (Exception ex) {
@@ -89,24 +108,18 @@ public class Client{
         return commandsMap;
     }
 
-    static private List<Category> parseSubCommand(String cmdString) {
+    static private List<Category> parseSubCommand(String cmdString, Peer peer) {
         List<Category> categoryList = new ArrayList<>();
         String[] args = cmdString.split(" ");
         if ( (args.length < 3) || (!args[1].equals(CATEGORY)) ) {
-            System.out.println("Lack of arguments: command must be given as: subscribe -category cat");
+            System.out.println("Incorrect arguments: command must be given as: subscribe -category cat");
             return null;
         } else {
             for (String arg: Arrays.copyOfRange(args, 2, args.length)) {
-                try {
-                    Category category = Category.valueOf(arg.toUpperCase());
-                    categoryList.add(category);
-                } catch (IllegalArgumentException ex) {
-                    System.out.println(ex.getMessage());
-                    System.out.println("Invalid category: " + arg + ", Expect: CAT, DOG, BIRD, RABBIT");
-                    return null;
-                }
+                    categoryList.add(new Category(arg));
             }
             return categoryList;
         }
     }
+
 }
