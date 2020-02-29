@@ -2,6 +2,7 @@ import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Peer implements PubSub {
     public static final double GAMMA = 0.5;
@@ -12,8 +13,10 @@ public class Peer implements PubSub {
     String ip;
     int port;
     public final static int M = 4;
-    //private static final String bootIp = "172.31.4.36";
-    private static final String bootIp = "172.31.144.91";
+    //private static final String bootIp = "172.31.4.36"; // EC2
+    //private static final String bootIp = "172.31.144.91"; // XHG
+    private static final String bootIp = "172.31.134.108"; // WFY
+
     private static final int bootPort = 8001;
     private PeerInfo bootPeer = new PeerInfo(getHash(bootIp + ":" + bootPort),bootIp, bootPort);
     private List<PeerInfo> neiList;
@@ -235,6 +238,17 @@ public class Peer implements PubSub {
         fingerTable.set(index, peerInfo == null ? null : peerInfo.getAddress());
     }
 
+    void updateSubscriptionList(PeerInfo peerInfo) {
+/*        List<PeerInfo> newFingerTable = fingerTable.stream()
+                .map(o -> o.id == peerInfo.id ? peerInfo : o)
+                .collect(Collectors.toList());
+        Collections.copy(fingerTable, newFingerTable);*/
+        List<PeerInfo> newNeiList = neiList.stream()
+                .map(o -> o.id == peerInfo.id ? peerInfo : o)
+                .collect(Collectors.toList());
+        Collections.copy(neiList, newNeiList);
+    }
+
     private int getHash(String key) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
@@ -280,7 +294,7 @@ public class Peer implements PubSub {
             return;
         }
         // If the message's TTL is 0
-        if (msg == null || msg.decreaseTTL() == -1) {
+        if (msg.decreaseTTL() == -1) {
             System.out.println("The TTL of message is 0 so discard it!");
             return;
         }
@@ -314,8 +328,31 @@ public class Peer implements PubSub {
 
     // Update the subscription list
     @Override
-    public void updateSubList() {
-    // TODO
+    public void updateSubList(List<Category> categoryList, boolean subAction) {
+
+        PeerInfo localPeerInfo = new PeerInfo(id, ip, port, subscriptionList);
+
+        System.out.printf("Updating local subscription list -- IP = %s, Port = %d\n", ip, port);
+        for (Category c: categoryList) {
+            if (subAction) {
+                subscriptionList.add(c);
+                System.out.println("Category " + c.toString() + " subscribed");
+            } else {
+                subscriptionList.remove(c);
+                System.out.println("Category " + c.toString() + " unsubscribed");
+            }
+        }
+
+        System.out.println("Notify neighbors to update their finger tables per change of current peer's subscription list ...");
+        Set<PeerInfo> notifiedNeighbors = new HashSet<>();
+        for (PeerInfo peer: neiList/*fingerTable*/) {
+            // Avoid sending message to the same peer multiple times and avoid send to itself
+            if (!notifiedNeighbors.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
+                continue;
+            }
+            System.out.printf("Notify neighbor -- ip = %s, port = %d\n", peer.ip, peer.port);
+            RPC.notifyNeighborUpdateSub(localPeerInfo, peer);
+        }
     }
 
     public void quit() {

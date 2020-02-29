@@ -32,6 +32,8 @@ public class ServerHandler implements Runnable {
                 changePredecessor(request.peerInfo);
             } else if (line.endsWith("changeSuccessor")) {
                 changeSuccessor(request.peerInfo);
+            } else if (line.endsWith("updateSub")) {
+                updateNeighborSub(request.peerInfo);
             } else {
                 socket.close();
             }
@@ -130,4 +132,9 @@ public class ServerHandler implements Runnable {
     //         }
     //     }
     // }
+
+    private void updateNeighborSub(PeerInfo peerInfo) {
+        System.out.printf("Notification received to update subList of Peer: IP = %s, Port = %d\n", peerInfo.ip, peerInfo.port);
+        peer.updateSubscriptionList(peerInfo);
+    }
 }

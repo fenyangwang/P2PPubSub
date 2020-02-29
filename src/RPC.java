@@ -155,4 +155,27 @@ public class RPC {
         }
     }
 
+    public static void notifyNeighborUpdateSub(PeerInfo currentPeer, PeerInfo neighborPeer) {
+        Socket socket = null;
+        ObjectOutputStream objectOutputStream = null;
+
+        try {
+            socket = new Socket(neighborPeer.ip, neighborPeer.port);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(new Request(currentPeer, "updateSub"));
+            objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                objectOutputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
 }
