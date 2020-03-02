@@ -1,7 +1,3 @@
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-
 public class FingersFixer implements Runnable {
 
     private Peer peer;
