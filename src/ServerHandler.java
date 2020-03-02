@@ -27,7 +27,7 @@ public class ServerHandler implements Runnable {
                 notify(request.peerInfo);
             } else if (line.endsWith("findPre")) {
                 findPredecessor(objectOutputStream);
-            } else if (line.endsWith("disseminate")) {
+            } else if (line.endsWith("disseminateMsg")) {
                 extractMessage(request);
             } else if (line.endsWith("changePredecessor")) {
                 changePredecessor(request.peerInfo);
@@ -62,7 +62,7 @@ public class ServerHandler implements Runnable {
         if (peer.subscriptionList.contains(msg.getCategory())) {
             System.out.println("!!! I'm the subscriber of this message !!!");
         }
-        peer.disseminate(msg);
+        peer.disseminate(new Request(msg, "disseminateMsg"), false, PubSub.DISS_MSG_GAMMA);
     }
 
     private void findSuccessor(String line, ObjectOutputStream objectOutputStream) {
@@ -117,25 +117,6 @@ public class ServerHandler implements Runnable {
         peer.setSuccessor(peerInfo);
     }
 
-
-    // private void sendMessage(PrintWriter printWriter) {
-    //     try {
-    //         printWriter = new PrintWriter(socket.getOutputStream());
-    //         System.out.println("999999999999999");
-    //         printWriter.println("server " + count + " received message" + "on port: " + peer.port);
-    //         printWriter.flush();
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     } finally {
-    //         printWriter.close();
-    //         try {
-    //             socket.close();
-    //         } catch (IOException e) {
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // }
-
     private void updateNeighborSub(PeerInfo peerInfo) {
         System.out.printf("Notification received to update subList of Peer: IP = %s, Port = %d\n", peerInfo.ip, peerInfo.port);
         peer.updateSubscriptionList(peerInfo);
@@ -146,6 +127,6 @@ public class ServerHandler implements Runnable {
         for (Category c: newCategoryList) {
             peer.validCategorySet.add(c);
         }
-        peer.gossipCategory(newCategoryList, msg);
+        peer.disseminate(new Request(newCategoryList, msg, "updateCategory"), true, PubSub.DISS_NEW_CATEGORY_GAMMA);
     }
 }

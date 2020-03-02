@@ -46,20 +46,6 @@ public class FingersFixer implements Runnable {
                         peer.updateFingerTable(i, null);
                     }
                 }
-
-               /* try {
-                    if (peerInfo != null) {
-                        Socket socket = new Socket(peerInfo.ip, peerInfo.port);
-                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                        objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), "test"));
-                        socket.close();
-                        peer.updateFingerTable(i, peerInfo);
-                        //peerInfo.showDetails();
-                    }
-                } catch (IOException e) {
-                    System.out.println("Entry " + i + " is offline, set this entry as null");
-                    peer.updateFingerTable(i, null);
-                }*/
             }
             try {
                 Thread.sleep(1000);

@@ -1,8 +1,6 @@
 import java.io.*;
 import java.net.BindException;
 import java.net.Socket;
-import java.util.List;
-
 
 public class RPC {
     
@@ -85,25 +83,24 @@ public class RPC {
         return null;
     }
     
-    // Send object message by TCP
-    public static void sendMessage(PeerInfo peerInfo, Message msg) {
+    // Send object by TCP
+    public static void sendObject(PeerInfo peerInfo, Request request) {
+        Socket socket = null;
+        ObjectOutputStream objectOutputStream = null;
         try {
-            // System.out.println("RPC is sending message or object");
-            Socket socket = new Socket(peerInfo.ip,peerInfo.port);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            objectOutputStream.writeObject(new Request(msg, "disseminate"));
+            socket = new Socket(peerInfo.ip,peerInfo.port);
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(request);
             objectOutputStream.flush();
-
-            String line = bufferedReader.readLine();
-            if (line != null) {
-                System.out.println(line + " from RPC on port " + peerInfo.port);
-            }
-            objectOutputStream.close();
-            bufferedReader.close();
-            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                objectOutputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -177,26 +174,4 @@ public class RPC {
             }
         }
     }
-
-    public static void sendCategoryUpdate(List<Category> newCategories, Message msg, PeerInfo neighborPeer) {
-        Socket socket = null;
-        ObjectOutputStream objectOutputStream = null;
-
-        try {
-            socket = new Socket(neighborPeer.ip, neighborPeer.port);
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(new Request(newCategories, msg,"updateCategory"));
-            objectOutputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
 }

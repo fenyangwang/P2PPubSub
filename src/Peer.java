@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Peer implements PubSub {
-    public static final double GAMMA = 0.8;
     public static final int TOTAL_NUM = 10;
 
     int id;
@@ -13,10 +12,12 @@ public class Peer implements PubSub {
     String ip;
     int port;
     public final static int M = 4;
+    public static final int MAXTTL = 5;
     //private static final String bootIp = "172.31.4.36"; // EC2
     //private static final String bootIp = "172.31.144.91"; // XHG
     //private static final String bootIp = "172.31.134.108"; // WFY
-    private static final String bootIp = "192.168.0.16"; // WFY Home
+    // private static final String bootIp = "192.168.0.16"; // WFY Home
+    private static final String bootIp = "127.0.0.1"; // Dewen 
 
     private static final int bootPort = 8001;
     private PeerInfo bootPeer = new PeerInfo(getHash(bootIp + ":" + bootPort),bootIp, bootPort);
@@ -25,7 +26,6 @@ public class Peer implements PubSub {
     Set<Category> validCategorySet;
     Set<Category> subscriptionList;
     private Set<Message> processedMsgSet;
-    private Set<Message> processedNewCategMsgSet;
     private PeerInfo predecessor;
     private PeerInfo successor;
     private Listener listener;
@@ -51,7 +51,6 @@ public class Peer implements PubSub {
         this.validCategorySet.add(new Category("BIRD"));
         this.validCategorySet.add(new Category("RABBIT"));
         this.subscriptionList = new HashSet<>();
-        // this.subscriptionList.add(Category.CAT);
         this.processedMsgSet = new HashSet<>();
 
         this.listener = new Listener(this);
@@ -261,27 +260,25 @@ public class Peer implements PubSub {
         }
     }
 
-    // Disseminate message from user command
+    // Disseminate object to neighbors 
     @Override
-    public void disseminate(Message msg) {
-        if (msg == null) {
+    public void disseminate(Request request, boolean isCategoryDiss, double gamma) {
+        Message msg = request.message;
+        if (msg == null || request == null) {
             return;
         }
-        System.out.printf("Preparing to disseminate the message with content: %s, category: %s, created by: %s : %d, created at: %d, ttl is %d.\n", 
-                            msg.getContent(), msg.getCategory().toString(), msg.getSenderIP(), msg.getSenderPort(), msg.getTimeStamp(), msg.getTTL());
-
-        // If the message has already been processed, return
+        // If the object has already been processed, return
         if (!processedMsgSet.add(msg)) {
-            System.out.println("The message has been processed so discard it!");
+            System.out.println("The gossip message has been processed so discard it!");
             return;
         }
         // If the message's TTL is 0
         if (msg.decreaseTTL() == -1) {
-            System.out.println("The TTL of message is 0 so discard it!");
+            System.out.println("The TTL of gossip message is 0 so discard it!");
             return;
         }
         // Start to disseminate the message
-        int gammaNo = (int)(TOTAL_NUM * GAMMA);
+        int gammaNo = (int)(TOTAL_NUM * gamma);
         Random ran = new Random();
         System.out.println("\n############## Start to desseminate the message #################");
         Set<PeerInfo> processedPeer = new HashSet<>();
@@ -291,17 +288,17 @@ public class Peer implements PubSub {
                 continue;
             }
             // Send message to all neighbour subscribers
-            if (peer.subscriptionList.contains(msg.getCategory())) {
+            if (!isCategoryDiss && peer.subscriptionList.contains(msg.getCategory())) {
                 System.out.println("\n----------------------------------------");
                 System.out.printf("Send this message object (TTL: %d) to the subscriber neighbor ip: %s, port: %d\n", msg.getTTL(), peer.ip, peer.port);
                 System.out.println("----------------------------------------");
-                RPC.sendMessage(peer, msg);
+                RPC.sendObject(peer, request);
             } else { // Gossip to the remaining neighbours
                 if (ran.nextInt(TOTAL_NUM) < gammaNo) {
                     System.out.println("\n****************************************");
-                    System.out.printf("Gossip this message object (TTL: %d) to the non-subscriber neighbor ip: %s, port: %d\n",msg.getTTL(), peer.ip, peer.port);
+                    System.out.printf("Gossip this message object (TTL: %d) to the neighbor ip: %s, port: %d\n",msg.getTTL(), peer.ip, peer.port);
                     System.out.println("****************************************");
-                    RPC.sendMessage(peer, msg);
+                    RPC.sendObject(peer, request);
                 }
             }
         }
@@ -344,40 +341,8 @@ public class Peer implements PubSub {
         for (Category newCategory: newCategoryList) {
             validCategorySet.add(newCategory);
         }
-        int maxTTL = 5;
-        gossipCategory(newCategoryList, new Message(maxTTL, ip, port));
-    }
-
-    public void gossipCategory(List<Category> newCategoryList, Message msg) {
-        if (!processedNewCategMsgSet.add(msg)) {
-            System.out.println("The new category message has been processed so discard it!");
-            return;
-        }
-
-        // If the message's TTL is 0
-        if (msg.decreaseTTL() == -1) {
-            System.out.println("The TTL of new category message is 0 so discard it!");
-            return;
-        }
-
-        int gammaNo = (int)(TOTAL_NUM * GAMMA);
-        Random ran = new Random();
-        System.out.println("\n############## Start to broadcast the new categories #################");
-        Set<PeerInfo> processedPeer = new HashSet<>();
-        for (PeerInfo peer : neiList) {
-            // Avoid sending message to the same peer multiple times and avoid send to itself
-            if (!processedPeer.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
-                continue;
-            }
-            // Gossip to the neighbours
-            if (ran.nextInt(TOTAL_NUM) < gammaNo) {
-                System.out.println("\n****************************************");
-                System.out.printf("Gossip new categories to neighbor -- ip: %s, port: %d\n", peer.ip, peer.port);
-                System.out.println("****************************************");
-                RPC.sendCategoryUpdate(newCategoryList, msg, peer);
-            }
-        }
-        System.out.println("############## Gossip finished ##################");
+        Message msg = new Message(MAXTTL, ip, port);
+        disseminate(new Request(newCategoryList, msg, "updateCategory"), true, PubSub.DISS_NEW_CATEGORY_GAMMA);
     }
 
     public void quit() {
