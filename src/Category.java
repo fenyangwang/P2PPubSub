@@ -17,4 +17,14 @@ public class Category implements Serializable {
     public String getCategory() {
         return category;
     }
+
+    @Override
+    public int hashCode() {
+        return category.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return ((Category)other).category.equals(this.category);
+    }
 }

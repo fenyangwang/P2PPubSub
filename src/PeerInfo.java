@@ -33,9 +33,7 @@ public class PeerInfo implements Serializable {
             System.out.println("    predecessor is null, no detail to show");
             return;
         }
-        System.out.println("    predecessor id: " + predecessorAddress.getId());
-        System.out.println("    predecessor id: " + predecessorAddress.getIp());
-        System.out.println("    predecessor id: " + predecessorAddress.getPort());
+        System.out.printf("    predecessor id: %d, ip: %s, port: %d\n", predecessorAddress.getId(), predecessorAddress.getIp(), predecessorAddress.getPort());
     }
 
     void showSuccessorDetail() {
@@ -43,9 +41,7 @@ public class PeerInfo implements Serializable {
             System.out.println("    successor is null, no detail to show");
             return;
         }
-        System.out.println("    successor id: " + successorAddress.getId());
-        System.out.println("    successor id: " + successorAddress.getIp());
-        System.out.println("    successor id: " + successorAddress.getPort());
+        System.out.printf("    successor id: %d, ip: %s, port: %d\n", successorAddress.getId(), successorAddress.getIp(), successorAddress.getPort());
     }
 
     PeerAddress getAddress() {

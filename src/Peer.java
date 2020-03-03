@@ -34,8 +34,6 @@ public class Peer implements PubSub {
     private Stabilizer stabilizer;
     private PredecessorChecker predecessorChecker;
 
-
-
     public Peer(InetAddress inetAddress, int port) {
         this.inetAddress = inetAddress;
         this.ip = inetAddress.getHostAddress();
@@ -210,8 +208,6 @@ public class Peer implements PubSub {
 
     }
 
-
-
     void notifySuccessor() {
         checkSuccessor();
         //RPC.notifySuccessor(new PeerInfo(id, ip, port, subscriptionList), successor.ip, successor.port);
@@ -269,34 +265,34 @@ public class Peer implements PubSub {
         }
         // If the object has already been processed, return
         if (!processedMsgSet.add(msg)) {
-            System.out.println("The gossip message has been processed so discard it!");
+            System.out.println("The gossip object has been processed so discard it!");
             return;
         }
-        // If the message's TTL is 0
+        // If the object's TTL is 0
         if (msg.decreaseTTL() == -1) {
-            System.out.println("The TTL of gossip message is 0 so discard it!");
+            System.out.println("The TTL of gossip object is 0 so discard it!");
             return;
         }
-        // Start to disseminate the message
+        // Start to disseminate the object
         int gammaNo = (int)(TOTAL_NUM * gamma);
         Random ran = new Random();
-        System.out.println("\n############## Start to desseminate the message #################");
+        System.out.println("\n############## Start to desseminate the object #################");
         Set<PeerInfo> processedPeer = new HashSet<>();
         for (PeerInfo peer : neiList) {
-            // Avoid sending message to the same peer multiple times and avoid send to itself
+            // Avoid sending object to the same peer multiple times and avoid send to itself
             if (!processedPeer.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
                 continue;
             }
-            // Send message to all neighbour subscribers
+            // Send object to all neighbour subscribers
             if (!isCategoryDiss && peer.subscriptionList.contains(msg.getCategory())) {
                 System.out.println("\n----------------------------------------");
-                System.out.printf("Send this message object (TTL: %d) to the subscriber neighbor ip: %s, port: %d\n", msg.getTTL(), peer.ip, peer.port);
+                System.out.printf("Send this object (TTL: %d) to the subscriber neighbor ip: %s, port: %d\n", msg.getTTL(), peer.ip, peer.port);
                 System.out.println("----------------------------------------");
                 RPC.sendObject(peer, request);
             } else { // Gossip to the remaining neighbours
                 if (ran.nextInt(TOTAL_NUM) < gammaNo) {
                     System.out.println("\n****************************************");
-                    System.out.printf("Gossip this message object (TTL: %d) to the neighbor ip: %s, port: %d\n",msg.getTTL(), peer.ip, peer.port);
+                    System.out.printf("Gossip this object (TTL: %d) to the neighbor ip: %s, port: %d\n",msg.getTTL(), peer.ip, peer.port);
                     System.out.println("****************************************");
                     RPC.sendObject(peer, request);
                 }
@@ -324,12 +320,12 @@ public class Peer implements PubSub {
 
         System.out.println("Notify neighbors to update their finger tables per change of current peer's subscription list ...");
         Set<PeerInfo> notifiedNeighbors = new HashSet<>();
-        for (PeerInfo peer: neiList/*fingerTable*/) {
-            // Avoid sending message to the same peer multiple times and avoid send to itself
+        for (PeerInfo peer: neiList) {
+            // Avoid sending object to the same peer multiple times and avoid send to itself
             if (!notifiedNeighbors.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
                 continue;
             }
-            System.out.printf("Notify neighbor -- ip = %s, port = %d\n", peer.ip, peer.port);
+            System.out.printf("Notify new sub list to neighbor -- ip = %s, port = %d\n", peer.ip, peer.port);
             RPC.notifyNeighborUpdateSub(localPeerInfo, peer);
         }
         System.out.println("... Notification of Updated Subscription finished ...");
@@ -341,8 +337,18 @@ public class Peer implements PubSub {
         for (Category newCategory: newCategoryList) {
             validCategorySet.add(newCategory);
         }
+        this.showValidCategorySet();
         Message msg = new Message(MAXTTL, ip, port);
         disseminate(new Request(newCategoryList, msg, "updateCategory"), true, PubSub.DISS_NEW_CATEGORY_GAMMA);
+    }
+
+    // Display content in the valid Category Set
+    public void showValidCategorySet() {
+        System.out.println("\nThe current valid category set is: ");
+        for (Category c : this.validCategorySet) {
+            System.out.printf("%s, ", c);
+        }
+        System.out.println("\n");
     }
 
     public void quit() {
@@ -353,6 +359,6 @@ public class Peer implements PubSub {
         predecessorFixer.stop();
         stabilizer.stop();
         predecessorChecker.stop();
-        System.out.println("all set");
+        System.out.println("All set");
     }
 }

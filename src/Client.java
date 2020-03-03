@@ -20,8 +20,8 @@ public class Client{
             e.printStackTrace();
         }
         // Peer p = new Peer(inetAddress, PORT);// boot peer 4: 1, 7 / 7 7 8 12
-        Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
-        // Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
+        // Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
+        Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
         // Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
         // Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
         //Peer p = new Peer(inetAddress, 8006); // 9: 8, 11 / 11 11 15 1
@@ -34,44 +34,17 @@ public class Client{
         try {
             while (true) {
                 String command = scanner.nextLine();
-                if (command.equals("q")) {
+                if (command.equals("q")) { // node quits
                     p.quit();
                     break;
                 } else if (command.startsWith("publish")) {
-                    HashMap<String, String> commands;
-                    if ((commands = parsePubCommand(command)) != null) {
-                        Message msg = new Message(commands.get(CONTENT), new Category(commands.get(CATEGORY)),
-                                                    MAXTTL, inetAddress.toString(), PORT);
-                        System.out.printf("Preparing to disseminate the message with content: %s, category: %s, created by: %s : %d, created at: %d, ttl is %d.\n", 
-                                            msg.getContent(), msg.getCategory().toString(), msg.getSenderIP(), msg.getSenderPort(), msg.getTimeStamp(), msg.getTTL());
-                        p.disseminate(new Request(msg, "disseminateMsg"), false, PubSub.DISS_MSG_GAMMA);
-                    }
+                    publishHandler(command, p);
                 } else if (command.startsWith("subscribe") || command.startsWith("unsubscribe")) {
-                    // use command format like 'subscribe -category cat' and unsubscribe -category cat
-
-                    // True - to add, False - to remove
-                    boolean subAction = command.startsWith("subscribe") ? true : false;
-                    List<Category> categoryList = parseSubCommand(command, p);
-                    if (categoryList != null) {
-                        for (Category c: categoryList) {
-                            if (!p.validCategorySet.contains(c)) {
-                                categoryList.remove(c);
-                                System.out.println("Invalid category: " + c.toString() +
-                                        ", not found in current valid categories!");
-                            }
-                        }
-                        if (categoryList.size() > 0)
-                            p.updateSubList(categoryList, subAction);
-                    }
+                    subscribeHandler(command, p);
                 } else if (command.startsWith("addcategory")) {
-                    String[] cmdArgs = command.split(" ");
-                    List<Category> newCategoryList = new ArrayList<>();
-                    for (String name: Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length)) {
-                        Category c = new Category(name);
-                        newCategoryList.add(c);
-                    }
-                    if (newCategoryList.size() > 0)
-                        p.addCategory(newCategoryList);
+                    addCategoryHandler(command, p);
+                } else if (command.startsWith("v")) {// enable or disable verbose mode
+                    FingersFixer.reverseVerbose();
                 }
             }
         } catch (Exception ex) {
@@ -79,10 +52,57 @@ public class Client{
         } finally {
             scanner.close();
         }
-        System.out.println("skr");
-
+        System.out.println("Done and exit!");
     }
 
+    // Handle input command of publish
+    static private void publishHandler(String command, Peer p) {
+        HashMap<String, String> commands;
+        if ((commands = parsePubCommand(command)) != null) {
+            Message msg = new Message(commands.get(CONTENT), new Category(commands.get(CATEGORY)),
+                                        MAXTTL, p.ip, PORT);
+            System.out.printf("Preparing to disseminate the message with content: %s, category: %s, created by: %s : %d, created at: %d, ttl is %d.\n", 
+                                msg.getContent(), msg.getCategory().toString(), msg.getSenderIP(), msg.getSenderPort(), msg.getTimeStamp(), msg.getTTL());
+            p.disseminate(new Request(msg, "disseminateMsg"), false, PubSub.DISS_MSG_GAMMA);
+        }
+    }
+
+    // Handle input command of subscribe or unsubscribe
+    static private void subscribeHandler(String command, Peer p) {
+        // True - to add, False - to remove
+        boolean subAction = command.startsWith("subscribe") ? true : false;
+        List<Category> categoryList = parseSubCommand(command, p);
+        if (categoryList != null) {
+            for (Category c: categoryList) {
+                if (!p.validCategorySet.contains(c)) {
+                    categoryList.remove(c);
+                    System.out.println("Invalid category: " + c.toString() +
+                            ", not found in current valid categories!");
+                }
+            }
+            if (categoryList.size() > 0)
+                p.updateSubList(categoryList, subAction);
+        }
+    }
+
+    // Handle input command of addcategory
+    static private void addCategoryHandler(String command, Peer p) {
+        String[] cmdArgs = command.split(" ");
+        List<Category> newCategoryList = new ArrayList<>();
+        for (String name: Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length)) {
+            Category c = new Category(name);
+            if (!p.validCategorySet.contains(c)) {
+                newCategoryList.add(c);
+            }
+        }
+        if (newCategoryList.size() == 0) {
+            System.out.println("All of the input categories already exist!");
+            return;
+        }
+        p.addCategory(newCategoryList);
+    }
+
+    // Parse the input command for publish
     static private HashMap<String, String> parsePubCommand(String commandStr) {
         HashMap<String, String> commandsMap = new HashMap<>();
         String[] words = commandStr.split(" ");
@@ -109,6 +129,7 @@ public class Client{
         return commandsMap;
     }
 
+    // Parse the input command for subscribe
     static private List<Category> parseSubCommand(String cmdString, Peer peer) {
         List<Category> categoryList = new ArrayList<>();
         String[] args = cmdString.split(" ");
@@ -117,7 +138,7 @@ public class Client{
             return null;
         } else {
             for (String arg: Arrays.copyOfRange(args, 2, args.length)) {
-                    categoryList.add(new Category(arg));
+                categoryList.add(new Category(arg));
             }
             return categoryList;
         }

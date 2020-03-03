@@ -127,6 +127,7 @@ public class ServerHandler implements Runnable {
         for (Category c: newCategoryList) {
             peer.validCategorySet.add(c);
         }
+        peer.showValidCategorySet();
         peer.disseminate(new Request(newCategoryList, msg, "updateCategory"), true, PubSub.DISS_NEW_CATEGORY_GAMMA);
     }
 }
