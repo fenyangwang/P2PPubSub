@@ -65,7 +65,6 @@ public class Peer implements PubSub {
         predecessor = null;
         System.out.println("new node with id: " + id + " ip: " + ip + " port: " + port + " is created");
         successor = new PeerInfo(id, ip, port);
-        //successor = null;
         for (int i = 0; i < M; i++) {
             neiList.add(null);
             fingerTable.add(null);
@@ -82,10 +81,9 @@ public class Peer implements PubSub {
             return;
         }
         predecessor = null;
-        String message = id + " " + bootPeer.ip + " " + bootPeer.port + " findSucc";
-        successor = RPC.findSuccessor(message);
+        successor = RPC.requestObj(bootPeer, new Request(new PeerInfo(-1, "", -1), id + " findSucc"));
+        
         updateFingerTable(0, successor);
-        //notifySuccessor();
         System.out.println("Peer with id: " + id + " ip: " + ip + " port: " + port + " has successor: ");
         System.out.println("succ id: " + successor.id);
         System.out.println("succ id: " + successor.ip);
@@ -119,7 +117,6 @@ public class Peer implements PubSub {
             return successor;
         }
         if (id == targetId) {
-            //return new PeerInfo(id, ip, port, subscriptionList);
             return new PeerInfo(id, ip, port, predecessor == null ? null : predecessor.getAddress(), successor == null ? null : successor.getAddress(), subscriptionList, fingerTable);
         }
         if (id > successor.id) {
@@ -130,8 +127,7 @@ public class Peer implements PubSub {
             return successor;
         }
         PeerInfo closestPrecedingPeer = getClosetPrecedingPeer(targetId);
-        String message = targetId + " " + closestPrecedingPeer.ip + " " + closestPrecedingPeer.port + " findSucc";
-        return RPC.findSuccessor(message);
+        return RPC.requestObj(closestPrecedingPeer, new Request(new PeerInfo(-1, "", -1), targetId + " findSucc"));
     }
 
     PeerInfo getClosetPrecedingPeer(int peerId) {
@@ -155,15 +151,13 @@ public class Peer implements PubSub {
 
     void stabilize() {
         checkSuccessor();
-        String message = successor.ip + " " + successor.port;
-        PeerInfo successorCandidate = RPC.findPredecessor(message);
+        PeerInfo successorCandidate = RPC.requestObj(successor, new Request(new PeerInfo(-1, "", -1), "findPre"));
         if (successorCandidate == null) {
             return;
         }
         int candidateId = successorCandidate.id;
         if (id == candidateId) {
-            String command = successor.id + " " + successor.ip + " " + successor.port;
-            successor = RPC.findSuccessor(command);
+            successor = RPC.requestObj(successor, new Request(new PeerInfo(-1, "", -1), successor.id + " findSucc"));
             return;
         }
         if (id > successor.id) {
@@ -179,12 +173,10 @@ public class Peer implements PubSub {
 
     public void checkPredecessor() {
         if (predecessor == null) {
-            //System.out.println("predecessor is null, no need to check");
             return;
         }
         boolean isAlive = RPC.isPeerAlive(predecessor);
         if (!isAlive) {
-            //System.out.println("predecessor is offline");
             PeerAddress newPredecessor = predecessor.predecessorAddress;
             predecessor = new PeerInfo(newPredecessor.getId(), newPredecessor.getIp(), newPredecessor.getPort());
         }
@@ -192,26 +184,23 @@ public class Peer implements PubSub {
 
     public void checkSuccessor() {
         if (successor == null) {
-            //System.out.println("successor is null, no need to check");
             return;
         }
         boolean isAlive = RPC.isPeerAlive(successor);
         if (!isAlive) {
-            //System.out.println("successor is offline");
             PeerAddress newSuccessor = successor.successorAddress;
             if (newSuccessor != null) {
                 successor = new PeerInfo(newSuccessor.getId(), newSuccessor.getIp(), newSuccessor.getPort());
-            } else {
-                //System.out.println("new successor is null");
             }
         }
-
     }
 
     void notifySuccessor() {
         checkSuccessor();
-        //RPC.notifySuccessor(new PeerInfo(id, ip, port, subscriptionList), successor.ip, successor.port);
-        RPC.notifySuccessor(new PeerInfo(id, ip, port, predecessor == null ? null : predecessor.getAddress(), successor == null ? null : successor.getAddress(), subscriptionList, fingerTable), successor.ip, successor.port);
+        PeerInfo peerInfo = new PeerInfo(id, ip, port, predecessor == null ? null : predecessor.getAddress(), 
+                                            successor == null ? null : successor.getAddress(), subscriptionList, fingerTable);
+        String errMsg = "Successor might be offline, printed from RPC";
+        RPC.sendObject(successor, new Request(peerInfo, "notify"), errMsg);
     }
 
     void updateFingerTable(int index, PeerInfo peerInfo) {
@@ -241,7 +230,6 @@ public class Peer implements PubSub {
     }
 
     public void fixPredecessor(PeerInfo peerInfo) {
-        //PeerInfo peerInfo = new PeerInfo(peerId, peerIp, peerPort);
         // System.out.println("I am here on port " + port);
         if (successor.id == id) { // Local peer is the first peer in the ring and currently there are only two peers in the ring.
             successor = peerInfo;
@@ -288,13 +276,13 @@ public class Peer implements PubSub {
                 System.out.println("\n----------------------------------------");
                 System.out.printf("Send this object (TTL: %d) to the subscriber neighbor ip: %s, port: %d\n", msg.getTTL(), peer.ip, peer.port);
                 System.out.println("----------------------------------------");
-                RPC.sendObject(peer, request);
+                RPC.sendObject(peer, request, "");
             } else { // Gossip to the remaining neighbours
                 if (ran.nextInt(TOTAL_NUM) < gammaNo) {
                     System.out.println("\n****************************************");
                     System.out.printf("Gossip this object (TTL: %d) to the neighbor ip: %s, port: %d\n",msg.getTTL(), peer.ip, peer.port);
                     System.out.println("****************************************");
-                    RPC.sendObject(peer, request);
+                    RPC.sendObject(peer, request, "");
                 }
             }
         }
@@ -318,7 +306,7 @@ public class Peer implements PubSub {
             }
         }
 
-        System.out.println("Notify neighbors to update their finger tables per change of current peer's subscription list ...");
+        System.out.println("\nNotify neighbors to update their finger tables per change of current peer's subscription list ...");
         Set<PeerInfo> notifiedNeighbors = new HashSet<>();
         for (PeerInfo peer: neiList) {
             // Avoid sending object to the same peer multiple times and avoid send to itself
@@ -326,7 +314,7 @@ public class Peer implements PubSub {
                 continue;
             }
             System.out.printf("Notify new sub list to neighbor -- ip = %s, port = %d\n", peer.ip, peer.port);
-            RPC.notifyNeighborUpdateSub(localPeerInfo, peer);
+            RPC.sendObject(peer, new Request(localPeerInfo, "updateSub"), "");
         }
         System.out.println("... Notification of Updated Subscription finished ...");
     }
@@ -351,9 +339,12 @@ public class Peer implements PubSub {
         System.out.println("\n");
     }
 
+    // The peer quit the chord network and notify its predecessor and successor
     public void quit() {
-        RPC.notifySuccessorChangePredecessor(predecessor, successor);
-        RPC.notifyPredecessorChangeSuccessor(successor, predecessor);
+        RPC.sendObject(successor, new Request(predecessor, "changePredecessor"), "");
+        System.out.println("predecessor is changed");
+        RPC.sendObject(predecessor, new Request(successor, "changeSuccessor"), "");
+        System.out.println("successor is changed");
         listener.stop();
         fingersFixer.stop();
         predecessorFixer.stop();

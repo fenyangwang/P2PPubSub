@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -20,8 +21,8 @@ public class Client{
             e.printStackTrace();
         }
         // Peer p = new Peer(inetAddress, PORT);// boot peer 4: 1, 7 / 7 7 8 12
-        // Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
-        Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
+        Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
+        // Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
         // Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
         // Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
         //Peer p = new Peer(inetAddress, 8006); // 9: 8, 11 / 11 11 15 1
@@ -76,8 +77,7 @@ public class Client{
             for (Category c: categoryList) {
                 if (!p.validCategorySet.contains(c)) {
                     categoryList.remove(c);
-                    System.out.println("Invalid category: " + c.toString() +
-                            ", not found in current valid categories!");
+                    System.out.println("Invalid category: " + c.toString() + ", not found in current valid categories!");
                 }
             }
             if (categoryList.size() > 0)
@@ -131,7 +131,7 @@ public class Client{
 
     // Parse the input command for subscribe
     static private List<Category> parseSubCommand(String cmdString, Peer peer) {
-        List<Category> categoryList = new ArrayList<>();
+        List<Category> categoryList = new LinkedList<>();
         String[] args = cmdString.split(" ");
         if ( (args.length < 3) || (!args[1].equals(CATEGORY)) ) {
             System.out.println("Incorrect arguments: command must be given as: subscribe -category cat");
