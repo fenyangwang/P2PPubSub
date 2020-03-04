@@ -13,7 +13,7 @@ public class Peer implements PubSub {
     int port;
     public final static int M = 4;
     public static final int MAXTTL = 5;
-    //private static final String bootIp = "172.31.4.36"; // EC2
+    // private static final String bootIp = "172.31.4.36"; // EC2
     //private static final String bootIp = "172.31.144.91"; // XHG
     //private static final String bootIp = "172.31.134.108"; // WFY
     // private static final String bootIp = "192.168.0.16"; // WFY Home

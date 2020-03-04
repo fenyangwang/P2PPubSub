@@ -14,14 +14,18 @@ public class FingersFixer implements Runnable {
         startFixing = true;
         while (startFixing) {
             if (verbose) {
+                System.out.println("\n====================================================");
+                System.out.printf("I'm id: %d, ip: %s, port: %d\n", peer.id, peer.ip, peer.port);
                 if (peer.getPredecessor() == null) {
                     System.out.println("predecessor: null");
                 } else {
-                    System.out.println("predecessor: " + peer.getPredecessor().id);
+                    System.out.printf("predecessor: id: %d, ip: %s, port: %d\n", 
+                                    peer.getPredecessor().id, peer.getPredecessor().ip, peer.getPredecessor().port);
                 }
 
                 if (peer.getSuccessor() != null) {
-                    System.out.println("successor: " + peer.getSuccessor().id);
+                    System.out.printf("successor: id: %d, ip: %s, port: %d\n", 
+                                        peer.getSuccessor().id, peer.getSuccessor().ip, peer.getSuccessor().port);
                 } else {
                     System.out.println("successor: null");
                 }
@@ -37,6 +41,7 @@ public class FingersFixer implements Runnable {
                     peer.updateFingerTable(i, null);
                 } else {
                     if (verbose) {
+                        System.out.println("\n------------------- Finger Table ----------------------");
                         System.out.println("entry " + i + " " + peerInfo.id);
                     }
                 }

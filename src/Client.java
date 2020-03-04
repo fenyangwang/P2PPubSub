@@ -12,20 +12,23 @@ public class Client{
     public static final String CATEGORY = "-category";
     public static final String CONTENT = "-content";
     public static final int MAXTTL = 5;
-    public static final int PORT = 8001;
+    private static int port;
+    private static final int DEFAULT_PORT = 8001;
     public static void main(String[] args) {
         InetAddress inetAddress = null;
         try {
-            inetAddress = InetAddress.getLocalHost(); // 172.31.144.91
+            inetAddress = InetAddress.getLocalHost(); 
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        // Peer p = new Peer(inetAddress, PORT);// boot peer 4: 1, 7 / 7 7 8 12
-        Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
+        // Get argument port from user input
+        port = parseInputForPort(args);
+        Peer p = new Peer(inetAddress, port);// boot peer 4: 1, 7 / 7 7 8 12
+        // Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
         // Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
         // Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
         // Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
-        //Peer p = new Peer(inetAddress, 8006); // 9: 8, 11 / 11 11 15 1
+        // Peer p = new Peer(inetAddress, 8006); // 9: 8, 11 / 11 11 15 1
         //Peer p = new Peer(inetAddress, 8010); // 8: 7. 9 / 9 11 12 0
         //Peer p = new Peer(inetAddress, 8011); // 7: 4, 8 / 8 9 11 15
         //Peer p = new Peer(inetAddress, 8012); // 0: 15, 1 / 1 4 4 8
@@ -61,7 +64,7 @@ public class Client{
         HashMap<String, String> commands;
         if ((commands = parsePubCommand(command)) != null) {
             Message msg = new Message(commands.get(CONTENT), new Category(commands.get(CATEGORY)),
-                                        MAXTTL, p.ip, PORT);
+                                        MAXTTL, p.ip, port);
             System.out.printf("Preparing to disseminate the message with content: %s, category: %s, created by: %s : %d, created at: %d, ttl is %d.\n", 
                                 msg.getContent(), msg.getCategory().toString(), msg.getSenderIP(), msg.getSenderPort(), msg.getTimeStamp(), msg.getTTL());
             p.disseminate(new Request(msg, "disseminateMsg"), false, PubSub.DISS_MSG_GAMMA);
@@ -75,9 +78,15 @@ public class Client{
         List<Category> categoryList = parseSubCommand(command, p);
         if (categoryList != null) {
             for (Category c: categoryList) {
+                // See if the input category is within the valid category set
                 if (!p.validCategorySet.contains(c)) {
                     categoryList.remove(c);
                     System.out.println("Invalid category: " + c.toString() + ", not found in current valid categories!");
+                }
+                // See whether the input category has not been subscribed but the command is "unsubscribe"
+                if (!subAction && !p.subscriptionList.contains(c)) {
+                    categoryList.remove(c);
+                    System.out.println("Invalid category: " + c.toString() + ", unsubscribe category which is not on the subscribe list!");
                 }
             }
             if (categoryList.size() > 0)
@@ -144,4 +153,11 @@ public class Client{
         }
     }
 
+    // Parse the input command for port
+    static private int parseInputForPort(String[] cmdArgs) {
+        if (cmdArgs == null || cmdArgs.length < 2 || !cmdArgs[0].toLowerCase().equals("-port")) {
+            return DEFAULT_PORT;
+        }
+        return Integer.parseInt(cmdArgs[1]);
+    }
 }

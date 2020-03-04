@@ -118,12 +118,12 @@ public class ServerHandler implements Runnable {
     }
 
     private void updateNeighborSub(PeerInfo peerInfo) {
-        System.out.printf("Notification received to update subList of Peer: IP = %s, Port = %d\n", peerInfo.ip, peerInfo.port);
+        System.out.printf("\nNotification received to update subList of Peer: IP = %s, Port = %d\n", peerInfo.ip, peerInfo.port);
         peer.updateSubscriptionList(peerInfo);
     }
 
     private void updateCategory(List<Category> newCategoryList, Message msg) {
-        System.out.println("Notification received to update valid category set");
+        System.out.printf("\nNotification received from %s (TTL: %d) to update valid category set\n", this.socket.getRemoteSocketAddress(), msg.getTTL());
         for (Category c: newCategoryList) {
             peer.validCategorySet.add(c);
         }
