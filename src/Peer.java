@@ -220,8 +220,6 @@ public class Peer implements PubSub {
         boolean isAlive = RPC.isPeerAlive(predecessor);
         if (!isAlive) {
             predecessor = null;
-            //PeerAddress newPredecessor = predecessor.predecessorAddress;
-            //predecessor = new PeerInfo(newPredecessor.getId(), newPredecessor.getIp(), newPredecessor.getPort());
         }
     }
 

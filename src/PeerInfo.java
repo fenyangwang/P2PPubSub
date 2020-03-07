@@ -37,6 +37,7 @@ public class PeerInfo implements Serializable {
         subscriptionList = new HashSet<Category>();
     }
 
+
     public PeerInfo(int id, String ip, int port, PeerAddress predecessorAddress, List<PeerAddress> successorList, Set<Category> subscriptionList, List<PeerAddress> fingerTable) {
         this.id = id;
         this.ip = ip;
@@ -63,8 +64,6 @@ public class PeerInfo implements Serializable {
         }
         System.out.printf("    predecessor id: %d, ip: %s, port: %d\n", predecessorAddress.getId(), predecessorAddress.getIp(), predecessorAddress.getPort());
     }
-
-
 
     void showSuccessorDetail() {
         if (successorList == null) {
