@@ -118,7 +118,7 @@ public class ServerHandler implements Runnable {
     }
 
     private void updateNeighborSub(PeerInfo peerInfo) {
-        System.out.printf("\nNotification received to update subList of Peer: IP = %s, Port = %d\n", peerInfo.ip, peerInfo.port);
+        System.out.printf("\nNotification received to update subList of Peer: Id = %d, IP = %s, Port = %d\n", peerInfo.id, peerInfo.ip, peerInfo.port);
         peer.updateSubscriptionList(peerInfo);
     }
 

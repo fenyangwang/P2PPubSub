@@ -23,8 +23,8 @@ public class Client{
         }
         // Get argument port from user input
         port = parseInputForPort(args);
-        Peer p = new Peer(inetAddress, port);// boot peer 4: 1, 7 / 7 7 8 12
-        // Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
+        // Peer p = new Peer(inetAddress, port);// boot peer 4: 1, 7 / 7 7 8 12
+        Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
         // Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
         // Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
         // Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
@@ -65,6 +65,12 @@ public class Client{
         if ((commands = parsePubCommand(command)) != null) {
             Message msg = new Message(commands.get(CONTENT), new Category(commands.get(CATEGORY)),
                                         MAXTTL, p.ip, port);
+            // If the input category is not in the valid category set
+            Category inputCategory = new Category(commands.get(CATEGORY));
+            if (!p.validCategorySet.contains(inputCategory)) {
+                System.out.println("The input category does not exist in the valid category set.");
+                return;
+            }
             System.out.printf("Preparing to disseminate the message with content: %s, category: %s, created by: %s : %d, created at: %d, ttl is %d.\n", 
                                 msg.getContent(), msg.getCategory().toString(), msg.getSenderIP(), msg.getSenderPort(), msg.getTimeStamp(), msg.getTTL());
             p.disseminate(new Request(msg, "disseminateMsg"), false, PubSub.DISS_MSG_GAMMA);
