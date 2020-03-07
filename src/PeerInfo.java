@@ -10,17 +10,45 @@ public class PeerInfo implements Serializable {
     Set<Category> validCategorySet;
     Set<Category> subscriptionList;
     List<PeerAddress> fingerTable;
-    PeerAddress successorAddress;
+    List<PeerAddress> successorList;
     PeerAddress predecessorAddress;
 
-    public PeerInfo(int id, String ip, int port, PeerAddress predecessorAddress, PeerAddress successorAddress, Set<Category> subscriptionList, List<PeerAddress> fingerTable) {
+    PeerInfo(int id, String ip, int port) {
+        this.id = id;
+        this.ip = ip;
+        this.port = port;
+        validCategorySet = new HashSet<Category>();
+        subscriptionList = new HashSet<Category>();
+    }
+
+    PeerInfo(int id, String ip, int port, Set<Category> subscriptionList) {
+        this.id = id;
+        this.ip = ip;
+        this.port = port;
+        validCategorySet = new HashSet<Category>();
+        this.subscriptionList = subscriptionList;
+    }
+
+    PeerInfo(Set<Category> validCategorySet, int id, String ip, int port) {
+        this.validCategorySet = validCategorySet;
+        this.id = id;
+        this.ip = ip;
+        this.port = port;
+        subscriptionList = new HashSet<Category>();
+    }
+
+    public PeerInfo(int id, String ip, int port, PeerAddress predecessorAddress, List<PeerAddress> successorList, Set<Category> subscriptionList, List<PeerAddress> fingerTable) {
         this.id = id;
         this.ip = ip;
         this.port = port;
         this.predecessorAddress = predecessorAddress;
-        this.successorAddress = successorAddress;
+        this.successorList = successorList;
         this.subscriptionList = subscriptionList;
         this.fingerTable = fingerTable;
+    }
+
+    public List<PeerAddress> getSuccessorList() {
+        return successorList;
     }
 
     void showDetails() {
@@ -36,40 +64,25 @@ public class PeerInfo implements Serializable {
         System.out.printf("    predecessor id: %d, ip: %s, port: %d\n", predecessorAddress.getId(), predecessorAddress.getIp(), predecessorAddress.getPort());
     }
 
+
+
     void showSuccessorDetail() {
-        if (successorAddress == null) {
-            System.out.println("    successor is null, no detail to show");
+        if (successorList == null) {
+            System.out.println("    successorList is null, no detail to show");
             return;
         }
-        System.out.printf("    successor id: %d, ip: %s, port: %d\n", successorAddress.getId(), successorAddress.getIp(), successorAddress.getPort());
+        for (int i = 0; i < successorList.size(); i++) {
+            PeerAddress successorAddress = successorList.get(i);
+            if (successorAddress == null) {
+                continue;
+            }
+            System.out.printf("    entry: %d, successor id: %d, ip: %s, port: %d\n", i, successorAddress.getId(), successorAddress.getIp(), successorAddress.getPort());
+        }
+
     }
 
     PeerAddress getAddress() {
         return new PeerAddress(id, ip, port);
-    }
-
-    PeerInfo(int id, String ip, int port) {
-        this.id = id;
-        this.ip = ip;
-        this.port = port;
-        validCategorySet = new HashSet<Category>();
-        subscriptionList = new HashSet<Category>();
-    }
-    
-    PeerInfo(int id, String ip, int port, Set<Category> subscriptionList) {
-        this.id = id;
-        this.ip = ip;
-        this.port = port;
-        validCategorySet = new HashSet<Category>();
-        this.subscriptionList = subscriptionList;
-    }
-
-    PeerInfo(Set<Category> validCategorySet, int id, String ip, int port) {
-        this.validCategorySet = validCategorySet;
-        this.id = id;
-        this.ip = ip;
-        this.port = port;
-        subscriptionList = new HashSet<Category>();
     }
 
     @Override

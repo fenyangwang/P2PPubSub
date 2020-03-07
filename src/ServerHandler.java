@@ -4,12 +4,11 @@ import java.util.List;
 
 public class ServerHandler implements Runnable {
     private Socket socket;
-    // private int count;
     private Peer peer;
+
     ServerHandler(Socket socket, Peer peer, int count) {
         this.socket = socket;
         this.peer = peer;
-        // this.count = count;
     }
 
     @Override
@@ -19,7 +18,6 @@ public class ServerHandler implements Runnable {
         try {
             objectInputStream = new ObjectInputStream(socket.getInputStream());
             Request request = (Request) objectInputStream.readObject();
-            //String line = bufferedReader.readLine();
             String line = request.command;
             if (line.endsWith("findSucc")) {
                 findSuccessor(line, objectOutputStream);
@@ -69,7 +67,6 @@ public class ServerHandler implements Runnable {
         String[] request = line.split(" ");
         int targetId = Integer.valueOf(request[0]);
         PeerInfo peerInfo = peer.findSuccessor(targetId);
-        //System.out.println(peerInfo.id + " " + peerInfo.ip + " " + peerInfo.port + " " + peerInfo.subscriptionList.size());
         try {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(peerInfo);

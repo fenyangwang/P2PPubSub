@@ -33,9 +33,11 @@ public class RPC {
                 if (socket != null) {
                     socket.close();
                 }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
         return null;
     }
@@ -50,6 +52,7 @@ public class RPC {
             objectOutputStream.writeObject(request);
             objectOutputStream.flush();
         } catch (IOException e) {
+            System.out.println(errMsg);
             e.printStackTrace();
         } finally {
             try {
@@ -60,7 +63,6 @@ public class RPC {
                     socket.close();
                 }
             } catch (IOException e) {
-                System.out.println(errMsg);
                 e.printStackTrace();
             }
         }
@@ -74,6 +76,7 @@ public class RPC {
             socket = new Socket(peerInfo.ip, peerInfo.port);
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(new Request(new PeerInfo(-1, "", -1), "test"));
+            objectOutputStream.flush();
             return true;
         } catch (IOException e) {
             System.out.println("can't reach peer " + peerInfo.id);
