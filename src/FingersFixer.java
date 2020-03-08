@@ -14,7 +14,7 @@ public class FingersFixer implements Runnable {
         startFixing = true;
         while (startFixing) {
             if (verbose) {
-                System.out.println("\n====================================================");
+             System.out.println("\n====================================================");
                 System.out.printf("I'm id: %d, ip: %s, port: %d\n", peer.id, peer.ip, peer.port);
                 if (peer.getPredecessor() == null) {
                     System.out.println("predecessor: null");
@@ -22,7 +22,6 @@ public class FingersFixer implements Runnable {
                     System.out.printf("predecessor: id: %d, ip: %s, port: %d\n", 
                                     peer.getPredecessor().id, peer.getPredecessor().ip, peer.getPredecessor().port);
                 }
-
                 if (peer.getSuccessor() != null) {
                     System.out.printf("successor: id: %d, ip: %s, port: %d\n", 
                                         peer.getSuccessor().id, peer.getSuccessor().ip, peer.getSuccessor().port);
@@ -49,9 +48,6 @@ public class FingersFixer implements Runnable {
                     boolean isAlive = RPC.isPeerAlive(peerInfo);
                     if (isAlive) {
                         peer.updateFingerTable(i, peerInfo);
-                        if (verbose) {
-                            peerInfo.showDetails();
-                        }
                     } else {
                         if (verbose) {
                             System.out.println("Entry " + i + " is offline, set this entry as null");

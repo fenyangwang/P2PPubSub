@@ -16,7 +16,6 @@ public class Listener implements Runnable {
         this.inetAddress = peer.inetAddress;
         this.port = peer.port;
         try {
-            //serverSocket = new ServerSocket(this.port);
             serverSocket = new ServerSocket(this.port, 50, inetAddress);
             serverSocket.setReuseAddress(true);
         } catch (IOException e) {
