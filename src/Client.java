@@ -83,7 +83,7 @@ public class Client{
         boolean subAction = command.startsWith("subscribe") ? true : false;
         List<Category> categoryList = parseSubCommand(command, p);
         if (categoryList != null) {
-            for (Category c: categoryList) {
+            for (Category c : categoryList) {
                 // See if the input category is within the valid category set
                 if (!p.validCategorySet.contains(c)) {
                     categoryList.remove(c);
@@ -95,8 +95,9 @@ public class Client{
                     System.out.println("Invalid category: " + c.toString() + ", unsubscribe category which is not on the subscribe list!");
                 }
             }
-            if (categoryList.size() > 0)
+            if (categoryList.size() > 0) {
                 p.updateSubList(categoryList, subAction);
+            }
         }
     }
 
@@ -104,7 +105,7 @@ public class Client{
     static private void addCategoryHandler(String command, Peer p) {
         String[] cmdArgs = command.split(" ");
         List<Category> newCategoryList = new ArrayList<>();
-        for (String name: Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length)) {
+        for (String name : Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length)) {
             Category c = new Category(name);
             if (!p.validCategorySet.contains(c)) {
                 newCategoryList.add(c);
@@ -152,7 +153,7 @@ public class Client{
             System.out.println("Incorrect arguments: command must be given as: subscribe -category cat");
             return null;
         } else {
-            for (String arg: Arrays.copyOfRange(args, 2, args.length)) {
+            for (String arg : Arrays.copyOfRange(args, 2, args.length)) {
                 categoryList.add(new Category(arg));
             }
             return categoryList;

@@ -296,7 +296,7 @@ public class Peer implements PubSub {
         PeerInfo localPeerInfo = new PeerInfo(id, ip, port, subscriptionList);
 
         System.out.printf("Updating local subscription list -- IP = %s, Port = %d\n", ip, port);
-        for (Category c: categoryList) {
+        for (Category c : categoryList) {
             if (subAction) {
                 subscriptionList.add(c);
                 System.out.println("Category " + c.toString() + " subscribed");
@@ -308,7 +308,7 @@ public class Peer implements PubSub {
 
         System.out.println("\nNotify neighbors to update their finger tables per change of current peer's subscription list ...");
         Set<PeerInfo> notifiedNeighbors = new HashSet<>();
-        for (PeerInfo peer: neiList) {
+        for (PeerInfo peer : neiList) {
             // Avoid sending object to the same peer multiple times and avoid send to itself
             if (!notifiedNeighbors.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
                 continue;
@@ -322,7 +322,7 @@ public class Peer implements PubSub {
     // Add the new category
     public void addCategory(List<Category> newCategoryList) {
         System.out.println("Updating local valid category set ...");
-        for (Category newCategory: newCategoryList) {
+        for (Category newCategory : newCategoryList) {
             validCategorySet.add(newCategory);
         }
         this.showValidCategorySet();
