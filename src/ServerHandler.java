@@ -35,8 +35,8 @@ public class ServerHandler implements Runnable {
                 updateNeighborSub(request.peerInfo);
             } else if (line.endsWith("updateCategory")) {
                 updateCategory(request.categories, request.message);
-            } else {
-                socket.close();
+            } else if (line.endsWith("getValidCategorySet")) {
+                respondValidCategorySet(objectOutputStream);
             }
         } catch (IOException e) {
             System.out.println("here is the error on port " + peer.port);
@@ -45,13 +45,23 @@ public class ServerHandler implements Runnable {
             e.printStackTrace();
         } finally {
             try {
-                objectInputStream.close();
+                if (objectInputStream != null) {
+                    objectInputStream.close();
+                }
+                if (socket != null) {
+                    socket.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    // send valid category set
+    private void respondValidCategorySet(ObjectOutputStream objectOutputStream) {
+        respondObject(objectOutputStream, new PeerInfo(this.peer.validCategorySet, -1, "", -1));
+    }
+    
     //extract the published message, call corresponding method
     private void extractMessage(Request request) {
         Message msg = request.message;
@@ -67,21 +77,7 @@ public class ServerHandler implements Runnable {
         String[] request = line.split(" ");
         int targetId = Integer.valueOf(request[0]);
         PeerInfo peerInfo = peer.findSuccessor(targetId);
-        try {
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(peerInfo);
-            objectOutputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
+        respondObject(objectOutputStream, peerInfo);
     }
 
     private void notify(PeerInfo peerInfo) {
@@ -89,21 +85,7 @@ public class ServerHandler implements Runnable {
     }
 
     private void findPredecessor(ObjectOutputStream objectOutputStream) {
-        try {
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(peer.getPredecessor());
-            objectOutputStream.flush();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                objectOutputStream.close();
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        respondObject(objectOutputStream, peer.getPredecessor());
     }
 
     private void changePredecessor(PeerInfo peerInfo) {
@@ -121,10 +103,31 @@ public class ServerHandler implements Runnable {
 
     private void updateCategory(List<Category> newCategoryList, Message msg) {
         System.out.printf("\nNotification received from %s (TTL: %d) to update valid category set\n", this.socket.getRemoteSocketAddress(), msg.getTTL());
-        for (Category c: newCategoryList) {
-            peer.validCategorySet.add(c);
-        }
+        peer.validCategorySet.addAll(newCategoryList);
         peer.showValidCategorySet();
         peer.disseminate(new Request(newCategoryList, msg, "updateCategory"), true, PubSub.DISS_NEW_CATEGORY_GAMMA);
+    }
+
+    // Respond object through socket
+    private void respondObject(ObjectOutputStream objectOutputStream, Object obj) {
+        try {
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream.writeObject(obj);
+            objectOutputStream.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (objectOutputStream != null) {
+                    objectOutputStream.close();
+                }
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

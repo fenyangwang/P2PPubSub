@@ -15,10 +15,10 @@ public class Peer implements PubSub {
     public static final int MAXTTL = 5;
 
     //private static final String bootIp = "172.31.4.36"; // EC2
-    private static final String bootIp = "172.31.144.91"; // XHG
+    // private static final String bootIp = "172.31.144.91"; // XHG
     //private static final String bootIp = "172.31.134.108"; // WFY
     //private static final String bootIp = "192.168.0.16"; // WFY Home
-    //private static final String bootIp = "127.0.0.1"; // Dewen
+    private static final String bootIp = "127.0.0.1"; // Dewen
 
     private static final int bootPort = 8001;
     private PeerInfo bootPeer = new PeerInfo(getHash(bootIp + ":" + bootPort),bootIp, bootPort);
@@ -92,6 +92,9 @@ public class Peer implements PubSub {
         updateFingerTable(0, successor);
         successorList.set(0, successor.getAddress());
 
+        Set<Category> succValidCategorySet = RPC.requestObj(successor, new Request(new PeerInfo(-1, "", -1), "getValidCategorySet")).validCategorySet;
+        this.validCategorySet.addAll(succValidCategorySet);
+
         System.out.println("Peer with id: " + id + " ip: " + ip + " port: " + port + " has successor: ");
         System.out.println("succ id: " + successor.id);
         System.out.println("succ id: " + successor.ip);
@@ -127,7 +130,8 @@ public class Peer implements PubSub {
             return successor;
         }
         if (id == targetId) {
-            return new PeerInfo(id, ip, port, predecessor == null ? null : predecessor.getAddress(), successorList, subscriptionList, fingerTable);
+            return new PeerInfo(id, ip, port, predecessor == null ? null : 
+                        predecessor.getAddress(), successorList, subscriptionList, fingerTable);
         }
         if (id > successor.id) {
             if (targetId > id || targetId <= successor.id) {
@@ -280,6 +284,7 @@ public class Peer implements PubSub {
         } else if (predecessor.id <= peerInfo.id && peerInfo.id < id) {
             predecessor = peerInfo;
         }
+
     }
 
     // Disseminate object to neighbors 
@@ -372,6 +377,15 @@ public class Peer implements PubSub {
     public void showValidCategorySet() {
         System.out.println("\nThe current valid category set is: ");
         for (Category c : this.validCategorySet) {
+            System.out.printf("%s, ", c);
+        }
+        System.out.println("\n");
+    }
+
+    // Display content in the subscription list
+    public void showSubscriptionList() {
+        System.out.println("\nThe current subscription list is: ");
+        for (Category c : this.subscriptionList) {
             System.out.printf("%s, ", c);
         }
         System.out.println("\n");

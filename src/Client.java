@@ -11,6 +11,9 @@ public class Client{
 
     public static final String CATEGORY = "-category";
     public static final String CONTENT = "-content";
+    public static final String CATEGORY_SET = "-categoryset";
+    public static final String SUBSCRIPTION_LIST = "-subscriptionlist";
+
     public static final int MAXTTL = 5;
     private static int port;
     private static final int DEFAULT_PORT = 8001;
@@ -24,10 +27,10 @@ public class Client{
         // Get argument port from user input
         port = parseInputForPort(args);
         Peer p = new Peer(inetAddress, port);// boot peer 4: 1, 7 / 7 7 8 12
-        //Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
-        //Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
-        //Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
-        //Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
+        // Peer p = new Peer(inetAddress, 8002);// 1: 0, 4 / 4 4 7 9
+        // Peer p = new Peer(inetAddress, 8003); // 11: 9, 12 / 12 15 15 4
+        // Peer p = new Peer(inetAddress, 8004);// 12: 11, 15 / 15 15 0 4
+        // Peer p = new Peer(inetAddress, 8005); // 15: 12, 0 / 0 1 4 7
         //Peer p = new Peer(inetAddress, 8006); // 9: 8, 11 / 11 11 15 1
         //Peer p = new Peer(inetAddress, 8010); // 8: 7. 9 / 9 11 12 0
         //Peer p = new Peer(inetAddress, 8011); // 7: 4, 8 / 8 9 11 15
@@ -49,6 +52,8 @@ public class Client{
                     addCategoryHandler(command, p);
                 } else if (command.startsWith("v")) {// enable or disable verbose mode
                     FingersFixer.reverseVerbose();
+                } else if (command.startsWith("show")) {// show subscription list or valid category set
+                    showHandler(command, p);
                 }
             }
         } catch (Exception ex) {
@@ -116,6 +121,22 @@ public class Client{
             return;
         }
         p.addCategory(newCategoryList);
+    }
+
+    // Handle input command of show information
+    static private void showHandler(String command, Peer p) {
+        String[] cmdArgs = command.split(" ");
+        if (cmdArgs.length != 2) {
+            System.out.println("Incorrect arguments: command must be given as: show -categoryset or show -subscriptionlist!");
+            return;
+        }
+        if (cmdArgs[1].equals(CATEGORY_SET)) {
+            p.showValidCategorySet();
+        } else if (cmdArgs[1].equals(SUBSCRIPTION_LIST)) {
+            p.showSubscriptionList();
+        } else {
+            System.out.println("Incorrect arguments: command must be given as: show -categoryset or show -subscriptionlist!");
+        }
     }
 
     // Parse the input command for publish

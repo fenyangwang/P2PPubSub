@@ -41,7 +41,7 @@ public class FingersFixer implements Runnable {
                 } else {
                     if (verbose) {
                         System.out.println("\n------------------- Finger Table ----------------------");
-                        System.out.println("entry " + i + " " + peerInfo.id);
+                        System.out.println("entry " + i + " id: " + peerInfo.id);
                     }
                 }
                 if (peerInfo != null) {

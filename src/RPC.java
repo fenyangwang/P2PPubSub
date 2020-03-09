@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.Socket;
 
 public class RPC {
-    // Request object by TCP
+    // Request object by socket
     public static PeerInfo requestObj(PeerInfo peerInfo, Request request) {
         Socket socket = null;
         ObjectOutputStream objectOutputStream = null;
@@ -40,7 +40,7 @@ public class RPC {
         return null;
     }
     
-    // Send object by TCP
+    // Send object by socket
     public static void sendObject(PeerInfo peerInfo, Request request, String errMsg) {
         Socket socket = null;
         ObjectOutputStream objectOutputStream = null;
