@@ -14,7 +14,7 @@ public class Peer implements PubSub {
     public final static int M = 4;
     public static final int MAXTTL = 5;
 
-    //private static final String bootIp = "172.31.4.36"; // EC2
+    // private static final String bootIp = "172.31.4.36"; // EC2
     // private static final String bootIp = "172.31.144.91"; // XHG
     //private static final String bootIp = "172.31.134.108"; // WFY
     //private static final String bootIp = "192.168.0.16"; // WFY Home
@@ -92,6 +92,7 @@ public class Peer implements PubSub {
         updateFingerTable(0, successor);
         successorList.set(0, successor.getAddress());
 
+        // Sync the valid category set with successor
         Set<Category> succValidCategorySet = RPC.requestObj(successor, new Request(new PeerInfo(-1, "", -1), "getValidCategorySet")).validCategorySet;
         this.validCategorySet.addAll(succValidCategorySet);
 
@@ -264,12 +265,12 @@ public class Peer implements PubSub {
         fingerTable.set(index, peerInfo == null ? null : peerInfo.getAddress());
     }
 
-    void updateSubscriptionList(PeerInfo peerInfo) {
-        List<PeerInfo> newNeiList = neiList.stream()
-                .map(o -> o.id == peerInfo.id ? peerInfo : o)
-                .collect(Collectors.toList());
-        Collections.copy(neiList, newNeiList);
-    }
+    // void updateSubscriptionList(PeerInfo peerInfo) {
+    //     List<PeerInfo> newNeiList = neiList.stream()
+    //             .map(o -> o.id == peerInfo.id ? peerInfo : o)
+    //             .collect(Collectors.toList());
+    //     Collections.copy(neiList, newNeiList);
+    // }
 
     public void fixPredecessor(PeerInfo peerInfo) {
         if (successor.id == id) { // Local peer is the first peer in the ring and currently there are only two peers in the ring.
@@ -336,7 +337,7 @@ public class Peer implements PubSub {
     @Override
     public void updateSubList(List<Category> categoryList, boolean subAction) {
 
-        PeerInfo localPeerInfo = new PeerInfo(id, ip, port, subscriptionList);
+        // PeerInfo localPeerInfo = new PeerInfo(id, ip, port, subscriptionList);
 
         System.out.printf("Updating local subscription list -- IP = %s, Port = %d\n", ip, port);
         for (Category c : categoryList) {
@@ -350,16 +351,16 @@ public class Peer implements PubSub {
         }
 
         System.out.println("\nNotify neighbors to update their finger tables per change of current peer's subscription list ...");
-        Set<PeerInfo> notifiedNeighbors = new HashSet<>();
-        for (PeerInfo peer : neiList) {
-            // Avoid sending object to the same peer multiple times and avoid send to itself
-            if (!notifiedNeighbors.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
-                continue;
-            }
-            System.out.printf("Notify new sub list to neighbor -- ip = %s, port = %d\n", peer.ip, peer.port);
-            RPC.sendObject(peer, new Request(localPeerInfo, "updateSub"), "");
-        }
-        System.out.println("... Notification of Updated Subscription finished ...");
+        // Set<PeerInfo> notifiedNeighbors = new HashSet<>();
+        // for (PeerInfo peer : neiList) {
+        //     // Avoid sending object to the same peer multiple times and avoid send to itself
+        //     if (!notifiedNeighbors.add(peer) || (peer.ip.equals(this.ip) && peer.port == this.port)) {
+        //         continue;
+        //     }
+        //     System.out.printf("Notify new sub list to neighbor -- ip = %s, port = %d\n", peer.ip, peer.port);
+        //     RPC.sendObject(peer, new Request(localPeerInfo, "updateSub"), "");
+        // }
+        // System.out.println("... Notification of Updated Subscription finished ...");
     }
 
     // Add the new category

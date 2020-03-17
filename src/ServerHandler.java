@@ -31,8 +31,8 @@ public class ServerHandler implements Runnable {
                 changePredecessor(request.peerInfo);
             } else if (line.endsWith("changeSuccessor")) {
                 changeSuccessor(request.peerInfo);
-            } else if (line.endsWith("updateSub")) {
-                updateNeighborSub(request.peerInfo);
+            // } else if (line.endsWith("updateSub")) {
+            //     updateNeighborSub(request.peerInfo);
             } else if (line.endsWith("updateCategory")) {
                 updateCategory(request.categories, request.message);
             } else if (line.endsWith("getValidCategorySet")) {
@@ -96,10 +96,10 @@ public class ServerHandler implements Runnable {
         peer.setSuccessor(peerInfo);
     }
 
-    private void updateNeighborSub(PeerInfo peerInfo) {
-        System.out.printf("\nNotification received to update subList of Peer: Id = %d, IP = %s, Port = %d\n", peerInfo.id, peerInfo.ip, peerInfo.port);
-        peer.updateSubscriptionList(peerInfo);
-    }
+    // private void updateNeighborSub(PeerInfo peerInfo) {
+    //     System.out.printf("\nNotification received to update subList of Peer: Id = %d, IP = %s, Port = %d\n", peerInfo.id, peerInfo.ip, peerInfo.port);
+    //     peer.updateSubscriptionList(peerInfo);
+    // }
 
     private void updateCategory(List<Category> newCategoryList, Message msg) {
         System.out.printf("\nNotification received from %s (TTL: %d) to update valid category set\n", this.socket.getRemoteSocketAddress(), msg.getTTL());

@@ -41,7 +41,7 @@ public class Client{
         try {
             while (true) {
                 String command = scanner.nextLine();
-                if (command.equals("q")) { // node quits
+                if (command.equals("q") || command.equals("Q")) { // node quits
                     p.quit();
                     break;
                 } else if (command.startsWith("publish")) {
@@ -50,7 +50,7 @@ public class Client{
                     subscribeHandler(command, p);
                 } else if (command.startsWith("addcategory")) {
                     addCategoryHandler(command, p);
-                } else if (command.startsWith("v")) {// enable or disable verbose mode
+                } else if (command.startsWith("v") || command.equals("V")) {// enable or disable verbose mode
                     FingersFixer.reverseVerbose();
                 } else if (command.startsWith("show")) {// show subscription list or valid category set
                     showHandler(command, p);
